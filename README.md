@@ -43,6 +43,8 @@ npm install
 npm run build
 ```
 
+**Add AWS Access Keys**: Replace `<<your_aws_access_key>>`, `<<your_aws_secret_key>>` keys in the `.env` file with values provided via Slack.
+
 ## Running the Application
 
 1. **Navigate to the App Directory**: Change to the directory where the Data Viewer App is located:
