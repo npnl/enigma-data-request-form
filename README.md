@@ -27,14 +27,14 @@ cd enigma-data-request-form
 
 ## Installation
 
-1. **Setup Python venv**: 
+**Setup Python venv**: 
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-1. **Install Dependencies**: Run the following command in your terminal to install the necessary Python libraries:
+**Install Dependencies**: Run the following command in your terminal to install the necessary Python libraries:
 
     ```bash
     pip install -r requirements.txt
@@ -45,13 +45,13 @@ source venv/bin/activate
 
 ## Running the Application
 
-2. **Navigate to the App Directory**: Change to the directory where the Data Viewer App is located:
+1. **Navigate to the App Directory**: Change to the directory where the Data Viewer App is located:
 
     ```plaintext
     cd ..
     ```
 
-3. **Execute the App**: Start the application by running:
+2. **Execute the App**: Start the application by running:
 
     ```bash
     flask --app application run --debug
@@ -59,7 +59,7 @@ source venv/bin/activate
 
     This launches the app, making it accessible via a web browser.
 
-4. **Access the App**: Open a web browser and visit `http://127.0.0.1:5000/` to interface with the Data Viewer App.
+3. **Access the App**: Open a web browser and visit `http://127.0.0.1:5000/` to interface with the Data Viewer App.
 
 ## Requirements and Limitations
 
