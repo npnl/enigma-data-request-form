@@ -1,0 +1,1428 @@
+{
+    "Acquisition": [
+        {
+            "metric_name": "SCANNER_BRAND",
+            "variable_type": "string",
+            "description": "Details of scanning parameters"
+        },
+        {
+            "metric_name": "SCANNER_MODEL",
+            "variable_type": "string",
+            "description": "Details of scanning parameters"
+        },
+        {
+            "metric_name": "SCANNER_STRENGTH",
+            "variable_type": "string",
+            "description": "Details of scanning parameters"
+        },
+        {
+            "metric_name": "SCANNER_TYPE",
+            "variable_type": "string",
+            "description": "Details of scanning parameters"
+        }
+    ],
+    "Cognitive": [
+        {
+            "metric_name": "APHASIA_COGNITIVE_TOTAL",
+            "variable_type": "int",
+            "description": "Cognitive total of the Comprehensive Aphasia Test Battery"
+        },
+        {
+            "metric_name": "APHASIA_NAMING",
+            "variable_type": "int",
+            "description": "Naming component of the Comprehensive Aphasia Test Battery"
+        },
+        {
+            "metric_name": "APHASIA_REPETITION",
+            "variable_type": "int",
+            "description": "Sub category of the comprehensive aphasia test battery"
+        },
+        {
+            "metric_name": "APHASIA_SPOKEN_PICTURE",
+            "variable_type": "int",
+            "description": "Subset of the Comprehensive Aphasia Test battery"
+        },
+        {
+            "metric_name": "APHASIA_TOTAL_COMP_SPOKEN_LANG",
+            "variable_type": "int",
+            "description": "Total comprehension of spoken language: part of the Comprehensive Aphasia battery"
+        },
+        {
+            "metric_name": "APHASIA_TOTAL_COMP_WRITTEN_LANG",
+            "variable_type": "int",
+            "description": "Total Comprehension of Written language: part of the Comprehensive Aphasia battery (53/62)"
+        },
+        {
+            "metric_name": "APHASIA_TOTAL_NAMING",
+            "variable_type": "int",
+            "description": "Total Naming (objects/action/fluecy) >69: part of the Comprehensive Aphasia battery"
+        },
+        {
+            "metric_name": "APHASIA_TOTAL_READING",
+            "variable_type": "int",
+            "description": "Total Reading score (58/70): part of the Comprehensive Aphasia battery"
+        },
+        {
+            "metric_name": "APHASIA_TOTAL_WRITING",
+            "variable_type": "int",
+            "description": "Total Writing score (66/76): part of the Comprehensive Aphasia battery"
+        },
+        {
+            "metric_name": "APHASIA_WORD_FLUENCY",
+            "variable_type": "int",
+            "description": "Word fluency (Animals + S) (minimum 13), word fluency component of the Comprehensive Aphasia Test Battery"
+        },
+        {
+            "metric_name": "ATTENTION",
+            "variable_type": "float",
+            "description": "Not speciffied - might be part of the 15-Short cognitive assessment?"
+        },
+        {
+            "metric_name": "BNT",
+            "variable_type": "int",
+            "description": "Boston Naming Test Score. The Boston Naming Test (BNT), is a measure of confrontation naming that takes into account the finding that patients who have greater difficulties with the naming of low frequency objects. Scoring: 0-60"
+        },
+        {
+            "metric_name": "BNT_15",
+            "variable_type": "int",
+            "description": "Shortened Boston Naming Test score. The Boston Naming Test (BNT), is a measure of confrontation naming that takes into account the finding that patients who have greater difficulties with the naming of low frequency objects."
+        },
+        {
+            "metric_name": "CABPAD_NORM",
+            "variable_type": "float",
+            "description": "CABPad (Cognitive Assessment at Bedside for iPad) is a short neuropsychological test battery for bedside screening for cognitive dysfunctions after stroke. Scoring: 0-55 Normalized scoring: 0-1"
+        },
+        {
+            "metric_name": "CLOCK_DRAW_TEST",
+            "variable_type": "int",
+            "description": "Clock drawing task. Organisational score. Ex: pt sets time to \"10 past 11\"."
+        },
+        {
+            "metric_name": "COGSTATE_DETECTION_MRT",
+            "variable_type": "float",
+            "description": "Cogstate computerised battery. Detection (simple reaction) task. Mean reaction time (milliseconds)"
+        },
+        {
+            "metric_name": "COGSTATE_DETECTION_PERCENT_CORRECT",
+            "variable_type": "float",
+            "description": "Cogstate computerised battery. Detection (simple reaction) task. Correct responses (percentage response)"
+        },
+        {
+            "metric_name": "COGSTATE_IDENTIFICATION_MRT",
+            "variable_type": "float",
+            "description": "Cogstate computerised battery. Identification (choice reaction) task. Mean reaction time (millseconds)"
+        },
+        {
+            "metric_name": "COGSTATE_IDENTIFICATION_PERCENT_CORRECT",
+            "variable_type": "float",
+            "description": "Cogstate computerised battery. Identification (choice reaction) task. Correct responses in percentage"
+        },
+        {
+            "metric_name": "COGSTATE_ONE_BACK_MRT",
+            "variable_type": "float",
+            "description": "Cogstate computerised battery. One-back task. Mean reaction time"
+        },
+        {
+            "metric_name": "COGSTATE_ONE_BACK_PERCENT_CORRECT",
+            "variable_type": "float",
+            "description": "Cogstate computerised battery. One-back task. Correct responses (percent)"
+        },
+        {
+            "metric_name": "COWAT_ANIMALS",
+            "variable_type": "int",
+            "description": "Controlled oral word association test: number of animals, patient has to list the animals"
+        },
+        {
+            "metric_name": "COWAT_FAS",
+            "variable_type": "int",
+            "description": "Controlled oral word association test: number of words beginning with, F, A, S"
+        },
+        {
+            "metric_name": "DIGITSPAN_BACKWARD",
+            "variable_type": "int",
+            "description": "Digits Backward subtest from the Wechsler Adult Intelligence Scale - Third Edition (WAIS-III)."
+        },
+        {
+            "metric_name": "DIGITSPAN_FORWARD",
+            "variable_type": "int",
+            "description": "Digits Forward subtest from the Wechsler Adult Intelligence Scale - Third Edition (WAIS-III)."
+        },
+        {
+            "metric_name": "DIGITSPAN_TOTAL",
+            "variable_type": "int",
+            "description": "Total score of digit span forward and backward."
+        },
+        {
+            "metric_name": "DIGIT_SYMBOL",
+            "variable_type": "float",
+            "description": "Digit symbol substitution task. Number of correct substitutions after 120 seconds."
+        },
+        {
+            "metric_name": "HVLT_DELAY",
+            "variable_type": "int",
+            "description": "HVLT: Hopkins Verbal Learning Test - consists of a 12-item word list, composed of four words from each of the three semantic categories. Delayed test checks no. of words recalled after a 20-25 minute delay."
+        },
+        {
+            "metric_name": "HVLT_RECOGNITION_DISCRIMINATION_INDEX",
+            "variable_type": "int",
+            "description": "HVLT: Part of Hopkins Verbal Learning Tets: Recognition Discrimination Index is calculated as number of hits - number of false positives."
+        },
+        {
+            "metric_name": "HVLT_RETENTION_PERCENT",
+            "variable_type": "float",
+            "description": "Percentage retention of HVLT"
+        },
+        {
+            "metric_name": "HVLT_TOTAL",
+            "variable_type": "int",
+            "description": "Total HVLT score"
+        },
+        {
+            "metric_name": "HVLT_TRIAL1",
+            "variable_type": "int",
+            "description": "No. of words HVLT 1st trial"
+        },
+        {
+            "metric_name": "HVLT_TRIAL2",
+            "variable_type": "int",
+            "description": "No. of words HVLT 2nd trial"
+        },
+        {
+            "metric_name": "HVLT_TRIAL3",
+            "variable_type": "int",
+            "description": "No. of words HVLT 3rd trial"
+        },
+        {
+            "metric_name": "LINES_CANCELLATION",
+            "variable_type": "int",
+            "description": "Screening tool used to detect the presence of unilateral spatial neglect. Scoring: 0-36"
+        },
+        {
+            "metric_name": "MMSE",
+            "variable_type": "int",
+            "description": "MMSE: Mini Mental Status Examination is a simple pen and paper test of cognitive function based on tests of orientation, concentration, attention, verbal memory, naming and visuospatial skills. Scoring: 0-30"
+        },
+        {
+            "metric_name": "MOCA_TOTAL",
+            "variable_type": "int",
+            "description": "MOCA: The Montreal Cognitive Assessment (MoCA) is a test used to detect mild cognitive decline and early signs of dementia. Scoring: 0-30"
+        },
+        {
+            "metric_name": "PHONOLOGICAL_FLUENCY",
+            "variable_type": "int",
+            "description": "Phonemic fluency. The total number of evoked words starting with the letters P, M, and R (60 seconds for each letter). Direct score."
+        },
+        {
+            "metric_name": "RAVLT_DELAYED",
+            "variable_type": "int",
+            "description": "Rey Auditory Verbal Learning Test. The number of words freely evoked after 20-30 minutes of learning."
+        },
+        {
+            "metric_name": "RAVLT_LEARNING",
+            "variable_type": "int",
+            "description": "Rey Auditory Verbal Learning Test. The sum of trials 1 to 5 in the learning phase. Direct score."
+        },
+        {
+            "metric_name": "RBANS_ATTENTION_INDEX",
+            "variable_type": "int",
+            "description": "RBANS_A: Repeatable Battery for the Assessment of Neuropsychological Status (RBANS) - Attention: This index is a measure of simple auditory registration and visual scanning and processing speed. Low scores indicate difficulties with basic attention processes and speed of information processing."
+        },
+        {
+            "metric_name": "RBANS_DELAYED_INDEX",
+            "variable_type": "int",
+            "description": "RBANS_Delayed: This index is a measure of delayed recall and recognition for verbal and visual information. Low scores indicate difficulties with recognition and retrieval of information from long-term memory stores."
+        },
+        {
+            "metric_name": "RBANS_IMMEDIATE_INDEX",
+            "variable_type": "int",
+            "description": "RBANS_Immediate: This index is a measure of initial encoding and learning of complex and simple verbal information. Low scores indicate difficulties with verbal learning."
+        },
+        {
+            "metric_name": "RBANS_LANGUAGE_INDEX",
+            "variable_type": "int",
+            "description": "RBANS_Language: This index is a measure of expressive language functioning. Low scores indicate difficulties with fluent use of language, including expressive and receptive language."
+        },
+        {
+            "metric_name": "RBANS_TOTAL_INDEX",
+            "variable_type": "int",
+            "description": "RBANS_Total: Total RBANS score"
+        },
+        {
+            "metric_name": "RBANS_TOTAL_PERCENTILE",
+            "variable_type": "float",
+            "description": "RBANS_percentile"
+        },
+        {
+            "metric_name": "RBANS_VERSION",
+            "variable_type": "string",
+            "description": "Version details of the RBANS: Repeatable Battery for the Assessment of Neuropsychological Status (RBANS) was developed for the dual purposes of identifying and characterizing abnormal cognitive decline in the older adult and as a neuropsychological screening battery."
+        },
+        {
+            "metric_name": "RBANS_VISUOSPATIAL_INDEX",
+            "variable_type": "int",
+            "description": "RBANS_VS: This index is a measure of basic visuospatial perception and the ability to copy a design from a model. Low scores indicate difficulties with processing and using visuospatial information."
+        },
+        {
+            "metric_name": "REY_COPY",
+            "variable_type": "int",
+            "description": "Rey-Osterrieth Complex Figure Test. The precision of the copy. Total raw copy score."
+        },
+        {
+            "metric_name": "REY_COPY_TIME",
+            "variable_type": "float",
+            "description": "Rey-Osterrieth Complex Figure Test component. Total time taken to copy task in seconds."
+        },
+        {
+            "metric_name": "REY_DELAY_RAW",
+            "variable_type": "int",
+            "description": "Rey-Osterrieth Complex Figure Test component. Delayed Recall Score after 30 mins."
+        },
+        {
+            "metric_name": "REY_MEMORY",
+            "variable_type": "int",
+            "description": "Rey-Osterrieth Complex Figure Test component. The memory drawing accuracy at 3-5 minutes. Direct score."
+        },
+        {
+            "metric_name": "REY_ORG_RAW",
+            "variable_type": "int",
+            "description": "Rey-Osterrieth Complex Figure Test component. Copy organizational score."
+        },
+        {
+            "metric_name": "SEMANTIC_FLUENCY",
+            "variable_type": "int",
+            "description": "Semantic Verbal Fluency (SVF) test entails the generation of words from a given category within a pre-set time of 60 seconds. Scoring: no. of words by the patient"
+        },
+        {
+            "metric_name": "STAR_CANCELLATION",
+            "variable_type": "int",
+            "description": "STAR CANCELLATION TASK"
+        },
+        {
+            "metric_name": "STROOP_C",
+            "variable_type": "int",
+            "description": "Card C of the Stroop Color and Word Test. Named colors in 45 seconds. Direct score (non-corrected for age). Score = no. of colors patient can name is 45 seconds"
+        },
+        {
+            "metric_name": "STROOP_CW",
+            "variable_type": "int",
+            "description": "Card CW of the Stroop Color and Word Test. Named colors in 45 seconds. Direct score (non-corrected for age)."
+        },
+        {
+            "metric_name": "STROOP_W",
+            "variable_type": "int",
+            "description": "Card W of the Stroop Color and Word Test. Read words in 45 seconds. Direct score (non-corrected for age)."
+        },
+        {
+            "metric_name": "TMT_A",
+            "variable_type": "float",
+            "description": "Trail Making Test Part A. Seconds to complete the numerical sequence. Direct score. More time indicates worse performance."
+        },
+        {
+            "metric_name": "TMT_B",
+            "variable_type": "float",
+            "description": "Trail Making Test Part B. Seconds to complete the numerical sequence. Direct score. More time indicates worse performance."
+        },
+        {
+            "metric_name": "TOKEN_TEST",
+            "variable_type": "int",
+            "description": "TOKEN TEST (16-ITEM): used for checking verbal comprehension"
+        },
+        {
+            "metric_name": "VOCABULARY",
+            "variable_type": "int",
+            "description": "Test of vocabulary: site does not specify which one"
+        },
+        {
+            "metric_name": "WAIS_MATRIX",
+            "variable_type": "int",
+            "description": "Matrix Reasoning subtest from the Wechsler Adult Intelligence Scale - Third Edition (WAIS-III). Direct score. Higher score means better performance. Scoring: 0-26"
+        },
+        {
+            "metric_name": "WAIS_SYMBOL_CODING",
+            "variable_type": "int",
+            "description": "Symbol Coding subtest from the Wechsler Adult Intelligence Scale - Third Edition (WAIS-III). Direct score."
+        }
+    ],
+    "Demographics": [
+        {
+            "metric_name": "AFFECTED_SIDE",
+            "variable_type": "int",
+            "description": "Affected side post stroke. Sometimes referred to as the paretic side."
+        },
+        {
+            "metric_name": "AFIB",
+            "variable_type": "int",
+            "description": "Atrial Fibrillation: Atrial fibrillation (Afib) is an irregular heart rhythm. Cardiovascular risk factor for stroke."
+        },
+        {
+            "metric_name": "AGE",
+            "variable_type": "float",
+            "description": "Person's Age"
+        },
+        {
+            "metric_name": "ALCOHOL",
+            "variable_type": "float",
+            "description": "Current alcohol consumption in standard drink units within a week."
+        },
+        {
+            "metric_name": "CAD",
+            "variable_type": "int",
+            "description": "Coronary Artery Disease: Cardiovascular risk factor, can be present or absent. Scoring options: 0 or 1"
+        },
+        {
+            "metric_name": "CAROTID_STENOSIS",
+            "variable_type": "string",
+            "description": "Carotid Stenosis: narrowing of the carotid artery, cardiovascular risk factor,"
+        },
+        {
+            "metric_name": "CHRONICITY",
+            "variable_type": "int",
+            "description": "More than 180 days post stroke or days since stroke. Can be a value i.e. no. of days e.g. 185 or can be yes/no"
+        },
+        {
+            "metric_name": "COPD",
+            "variable_type": "int",
+            "description": "COPD: Chronic Obstructive Pulmonary Disorder; a respiratory complication Can be present or absent (0 or 1)"
+        },
+        {
+            "metric_name": "DATE_OF_BIRTH",
+            "variable_type": "string",
+            "description": "Date of Birth of the patient"
+        },
+        {
+            "metric_name": "DATE_OF_STROKE",
+            "variable_type": "string",
+            "description": "Date on which patient had stroke"
+        },
+        {
+            "metric_name": "DAYS_IN_HOSPITAL",
+            "variable_type": "float",
+            "description": "No. of days patient was admitted in the hospital for"
+        },
+        {
+            "metric_name": "DAYS_POST_STROKE",
+            "variable_type": "float",
+            "description": "No. of days since patient had the stroke"
+        },
+        {
+            "metric_name": "DIABETES",
+            "variable_type": "int",
+            "description": "Diabetes is a chronic disease that occurs either when the pancreas does not produce enough insulin or when the body cannot effectively use the insulin it produces. Risk factor for stroke."
+        },
+        {
+            "metric_name": "DISCHARGE_DESTINATION",
+            "variable_type": "int",
+            "description": "Destination to which the patient was discharged."
+        },
+        {
+            "metric_name": "EDUCATION",
+            "variable_type": "string",
+            "description": "No. of years of education completed by the individual (e.g. high school = 12 years)"
+        },
+        {
+            "metric_name": "ETHNICITY",
+            "variable_type": "string",
+            "description": "Ethnicity of the individual"
+        },
+        {
+            "metric_name": "FIRST_STROKE",
+            "variable_type": "int",
+            "description": "Whether is it the patient's first stroke or not (yes or no)"
+        },
+        {
+            "metric_name": "FVO2PEAK_NORMALIZED_AGE_SEX_PCT",
+            "variable_type": "float",
+            "description": "Normalized (by age and sex) oxygen consumption in percentage"
+        },
+        {
+            "metric_name": "GENDER",
+            "variable_type": "int",
+            "description": "Gender of the person"
+        },
+        {
+            "metric_name": "HANDEDNESS",
+            "variable_type": "int",
+            "description": "Dominant hand of the individual"
+        },
+        {
+            "metric_name": "HANDEDNESS_POST_STROKE",
+            "variable_type": "int",
+            "description": "Handedness after the stroke"
+        },
+        {
+            "metric_name": "HANDEDNESS_PRE_STROKE",
+            "variable_type": "int",
+            "description": "Dominant side of the individual (left =1, right =2) Can also be 0, 1"
+        },
+        {
+            "metric_name": "HIGH_CHOL",
+            "variable_type": "int",
+            "description": "Presence of high cholesterol, a cardiovascular risk factor for stroke"
+        },
+        {
+            "metric_name": "HTN",
+            "variable_type": "int",
+            "description": "Presence of hypertension, a cardiovascular risk factor for stroke"
+        },
+        {
+            "metric_name": "INTERVENTION",
+            "variable_type": "string",
+            "description": "Intervention group, administered intervention, or time point?"
+        },
+        {
+            "metric_name": "NUM_OF_STROKES",
+            "variable_type": "int",
+            "description": "Number of strokes the patient has had"
+        },
+        {
+            "metric_name": "PT_CTRL",
+            "variable_type": "int",
+            "description": "Patient control group"
+        },
+        {
+            "metric_name": "RACE",
+            "variable_type": "string",
+            "description": "Racial identity of the person"
+        },
+        {
+            "metric_name": "SCAN_DATE",
+            "variable_type": "string",
+            "description": "Date of scanning"
+        },
+        {
+            "metric_name": "SEX",
+            "variable_type": "int",
+            "description": "Sex of the subject"
+        },
+        {
+            "metric_name": "SMOKING",
+            "variable_type": "int",
+            "description": "Whether person smokes or not"
+        },
+        {
+            "metric_name": "SMOKING_CIGARETTES",
+            "variable_type": "float",
+            "description": "Current number of cigarettes within a day"
+        },
+        {
+            "metric_name": "STROKE_TYPE",
+            "variable_type": "int",
+            "description": "Type of stroke. If more than one stroke, information presented corresponds to the most recent one. 1 = Hemorrhagic, 2 = Ischemic"
+        },
+        {
+            "metric_name": "TX_GROUP",
+            "variable_type": "string",
+            "description": "Treatment group details: site assigned"
+        },
+        {
+            "metric_name": "VO2PEAK_ML02PERKGPERMIN",
+            "variable_type": "float",
+            "description": "Peak oxygen consumption (normalized per kilogram, per minute) in milliliters"
+        }
+    ],
+    "Global_Dysfunction": [
+        {
+            "metric_name": "APRAXIA",
+            "variable_type": "int",
+            "description": "Apraxia is the loss of ability to execute or carry out skilled movement and gestures, despite having the physical ability and desire to perform them. Can be present or absent (e.g. 0 or 1)"
+        },
+        {
+            "metric_name": "BOSS_ADMISSION",
+            "variable_type": "int",
+            "description": "Burden of Stroke Scale (BOSS), a patient-reported health status assessment designed to quantify the physical, cognitive, and psychological burden of stroke. Scoring: 0-100 (where 100 means maximum burden)"
+        },
+        {
+            "metric_name": "BOSS_DISCHARGE",
+            "variable_type": "int",
+            "description": "Burden of Stroke Scale (BOSS), a patient-reported health status assessment designed to quantify the physical, cognitive, and psychological burden of stroke."
+        },
+        {
+            "metric_name": "CFQ11_ACUTE",
+            "variable_type": "int",
+            "description": "Acute component of Chalder Fatigue Scale, a self-administered scale that measures extent and severity of fatigue."
+        },
+        {
+            "metric_name": "CFQ11_CHRONIC",
+            "variable_type": "int",
+            "description": "Chronic component of Chalder Fatigue Scale, a self-administered scale that measures extent and severity of fatigue."
+        },
+        {
+            "metric_name": "CFQ11_LIKERT",
+            "variable_type": "int",
+            "description": "Likert score of Chalder Fatigue Scale, a self-administered scale that measures extent and severity of fatigue."
+        },
+        {
+            "metric_name": "CFQ11_MENTAL",
+            "variable_type": "int",
+            "description": "Mental component of Chalder Fatigue Scale, a self-administered scale that measures extent and severity of fatigue."
+        },
+        {
+            "metric_name": "CFQ11_PHYSICAL",
+            "variable_type": "int",
+            "description": "Physical component of Chalder Fatigue Scale, a self-administered scale that measures extent and severity of fatigue."
+        },
+        {
+            "metric_name": "CFQ11_TOTAL",
+            "variable_type": "int",
+            "description": "Chalder Fatigue Scale, a self-administered scale that measures extent and severity of fatigue. Scoring: 0-33"
+        },
+        {
+            "metric_name": "CFQ11_VAS",
+            "variable_type": "int",
+            "description": "Chalder Fatigue Scale: self-administered scale, measures extent and severity of fatigue. VAS (visual analogue scale) component measures the extent of chronic pain."
+        },
+        {
+            "metric_name": "FATIGUE_SEVERITY_SCALE",
+            "variable_type": "int",
+            "description": "The 9-item scale which measures the severity of fatigue and its effect on a person's activities and lifestyle in patients with a variety of disorders. Higher the score = greater fatigue severity."
+        },
+        {
+            "metric_name": "MBI",
+            "variable_type": "int",
+            "description": "Modified Barthel Index: measure of physical disability used widely to assess behaviour relating to activities of daily living for stroke patients or patients with other disabling conditions. Score: 0-100"
+        },
+        {
+            "metric_name": "MRS",
+            "variable_type": "int",
+            "description": "The Modified Rankin Scale (mRS) is used to measure the degree of disability in patients who have had a stroke. Higher scores indicates more global disability. Scoring: 0-6 (latest version)"
+        },
+        {
+            "metric_name": "MRS_FU",
+            "variable_type": "int",
+            "description": "Follow-up Modified Rankin Scale score. The Modified Rankin Scale (mRS) is used to measure the degree of disability in patients who have had a stroke. Higher scores indicates more global disability. Scoring: 0-6 (latest version)"
+        },
+        {
+            "metric_name": "MRS_FU_DAYS",
+            "variable_type": "int",
+            "description": "Number of days after baseline the Follow-up Modified Rankin Scale was performed. The Modified Rankin Scale (mRS) is used to measure the degree of disability in patients who have had a stroke. Higher scores indicates more global disability. Scoring: 0-6 (latest version)"
+        },
+        {
+            "metric_name": "NIHSS_ADMISSION",
+            "variable_type": "float",
+            "description": "NIHSS score at admission or within 2 hours after thrombolysis if thrombolysed"
+        },
+        {
+            "metric_name": "NIHSS_BASELINE",
+            "variable_type": "int",
+            "description": "NIHSS score at baseline"
+        },
+        {
+            "metric_name": "NIHSS_DISCHARGE",
+            "variable_type": "int",
+            "description": "NIHSS score at discharge"
+        },
+        {
+            "metric_name": "NIHSS_ITEMS",
+            "variable_type": "int",
+            "description": "NIHSS score for each individual item"
+        },
+        {
+            "metric_name": "NIHSS_MOTOR",
+            "variable_type": "int",
+            "description": "Motor component of the NIHSS"
+        },
+        {
+            "metric_name": "NIHSS_MOTOR_IMPAIRMENT",
+            "variable_type": "string",
+            "description": "Description of extent of motor impairment (e.g. no motor impairment or right arm impariment or facial palsy)"
+        },
+        {
+            "metric_name": "NIHSS_MOTOR_RAW",
+            "variable_type": "int",
+            "description": "Raw motor component score for NIHSS (arm + leg + ocular muscles + facial palsy)"
+        },
+        {
+            "metric_name": "NIHSS_NORM",
+            "variable_type": "float",
+            "description": "Normed value of NIHSS score"
+        },
+        {
+            "metric_name": "NIHSS_SES2",
+            "variable_type": "int",
+            "description": "NIHSS score at the time of second scan (ses-2)"
+        },
+        {
+            "metric_name": "NIHSS_TOTAL",
+            "variable_type": "int",
+            "description": "National Institute of Health Stroke Scale (NIHSS): Measures the severity of symptoms associated with cerebral infarcts; used as a quantitative measure of neurological deficit post stroke."
+        },
+        {
+            "metric_name": "SIS_ADL",
+            "variable_type": "int",
+            "description": "Activities of Daily Living domain of the Stroke Impact Scale. The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "SIS_TOTAL",
+            "variable_type": "int",
+            "description": "The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "SIS_TOTAL_NORM",
+            "variable_type": "float",
+            "description": "Normed value of Stroke Impact Scale. The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "SSQOL_MEAN",
+            "variable_type": "int",
+            "description": "SSQOL: Stroke Specific Quality of Life Scale: The SS-QOL assesses health-related quality of life specific to stroke survivors. The 12 domains include: 1) Mobility 2) Energy 3) Upper Extremity Function 4) Work and Productivity 5) Mood 6) Self-care 7) Social Roles 8) Family Roles 9) Vision 10) Language 11) Thinking 12) Personality Total scoring: 49-245"
+        },
+        {
+            "metric_name": "SSQOL_SELFCARE_MEAN",
+            "variable_type": "int",
+            "description": "Selfcare component mean of the SSQOL"
+        },
+        {
+            "metric_name": "SSQOL_UEFUNC_MEAN",
+            "variable_type": "int",
+            "description": "Upper extremity component mean of the SSQOL"
+        },
+        {
+            "metric_name": "STROKE_SELF_EFFICACY",
+            "variable_type": "int",
+            "description": "The SSEQ: Stroke Self Efficacy Questionnaire is a 13-item self-report scale measuring self-efficacy judgements and conficence in specific domains of functioning post stroke. Individuals rate their belief in their ability to achieve each of the 13 items on a 10-point scale, where 0 = not at all confident to 10 = very confident"
+        }
+    ],
+    "Identifier": [
+        {
+            "metric_name": "BIDS_ID",
+            "variable_type": "string",
+            "description": "Brain Imaging Data Structure (BIDS), describe a simple and easy to adopt way of organizing neuroimaging and behavioral data. It is the identification of the specific subject e.g."
+        },
+        {
+            "metric_name": "SES",
+            "variable_type": "string",
+            "description": "Session identifier in ENIGMA Stroke Recovery database format"
+        },
+        {
+            "metric_name": "SESSION_ID",
+            "variable_type": "string",
+            "description": "Basic unit of record in ENIGMA Stroke Recovery database. Both BIDS_ID and SES are joined by an underscore to form SESSION_ID."
+        }
+    ],
+    "Lesion_Information": [
+        {
+            "metric_name": "CST_LL_SITE",
+            "variable_type": "float",
+            "description": "Corticospinal Tract Lesion Load given by the site."
+        },
+        {
+            "metric_name": "LESIONED_HEMISPHERE",
+            "variable_type": "int",
+            "description": "Lesioned hemisphere (1 = left, 2 = right) as reported by site"
+        },
+        {
+            "metric_name": "LESIONED_HEMISPHERE_CHECKED",
+            "variable_type": "int",
+            "description": "Lesioned hemisphere as reported by NPNL after tracing"
+        },
+        {
+            "metric_name": "LESIONED_HEMISPHERE_DETAILS",
+            "variable_type": "string",
+            "description": "Details on the lesion site"
+        },
+        {
+            "metric_name": "LESIONED_TERRITORY",
+            "variable_type": "string",
+            "description": "Details on the lesion territory (e.g. R Middle Cerebral Artery) as provided by ENIGMA site"
+        },
+        {
+            "metric_name": "LESION_DETAILS",
+            "variable_type": "int",
+            "description": "Details of the lesion location, nature, side as noted by NPNL Lesion Tracing team"
+        },
+        {
+            "metric_name": "LESION_LOCATION",
+            "variable_type": "string",
+            "description": "Location of the injury according to the radiological report."
+        },
+        {
+            "metric_name": "LESION_VOLUME",
+            "variable_type": "float",
+            "description": "Volume of the lesion in cc"
+        }
+    ],
+    "Modality": [
+        {
+            "metric_name": "DIFFUSION",
+            "variable_type": "int",
+            "description": "Diffusion imaging present or not."
+        },
+        {
+            "metric_name": "DTI",
+            "variable_type": "int",
+            "description": "Diffusion Tensor Imaging (whether available/ unavailable)"
+        },
+        {
+            "metric_name": "DTI_DIRECTIONS",
+            "variable_type": "int",
+            "description": "Diffusion Tensor Imaging (no. of directions of availability)"
+        },
+        {
+            "metric_name": "FMRI_RESTING_STATE",
+            "variable_type": "int",
+            "description": "Collected resting-state fMRI?"
+        },
+        {
+            "metric_name": "FMRI_TASK_HAND",
+            "variable_type": "int",
+            "description": "Functional MRI task for the hand (0=no, 1=yes)"
+        },
+        {
+            "metric_name": "FMRI_TASK_WRIST",
+            "variable_type": "int",
+            "description": "Functional MRI task for the wrist (0=no, 1=yes)"
+        },
+        {
+            "metric_name": "T1",
+            "variable_type": "int",
+            "description": "T1 weighted structural MRI image/ modality (whether present or absent)"
+        },
+        {
+            "metric_name": "T2",
+            "variable_type": "int",
+            "description": "T2 weighted structural MRI image/ modality (whether present or absent)"
+        },
+        {
+            "metric_name": "T2_FLAIR",
+            "variable_type": "int",
+            "description": "T2 weighted structural MRI image/ modality (whether present or absent)"
+        }
+    ],
+    "Motor_Lower_Extremity": [
+        {
+            "metric_name": "ABC_TOTAL",
+            "variable_type": "float",
+            "description": "Activities-Specific Balance Confidence Scale: The ABC Scale is a self-report measure of balance confidence in performing various activities without losing balance or experiencing a sense of unsteadiness."
+        },
+        {
+            "metric_name": "BERG_BALANCE",
+            "variable_type": "int",
+            "description": "The Berg Balance Scale (BBS) is used to objectively determine a patient's ability (or inability) to safely balance during a series of predetermined tasks. Scoring: 0-56"
+        },
+        {
+            "metric_name": "DYN_GAIT_INDEX",
+            "variable_type": "int",
+            "description": "DGI (Dynamic Gait Index). Developed to assess the likelihood of falling in older adults. Designed to test eight facets of gait."
+        },
+        {
+            "metric_name": "FMLE",
+            "variable_type": "int",
+            "description": "Fugl Meyer Assessment Motor Component for the Lower Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FUNC_GAIT_AX",
+            "variable_type": "int",
+            "description": "The FGA is used to assess postural stability during walking and assesses an individual's ability to perform multiple motor tasks while walking. The tool is a modification of the 8-item Dynamic Gait Index."
+        },
+        {
+            "metric_name": "MOTRICITY_LEG_AFFECTED",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "MOTRICITY_LEG_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "OVERGROUND_WALK",
+            "variable_type": "float",
+            "description": "Over-ground Self-selected Walking Speeds (cm/s)"
+        },
+        {
+            "metric_name": "SIT_TO_STAND_5X_SEC",
+            "variable_type": "float",
+            "description": "The Five Times Sit to Stand Test measures one aspect of transfer skill. The test provides a method to quantify functional lower extremity strength and/or identify movement strategies a patient uses to complete transitional movements. Scoring: Time taken in seconds"
+        },
+        {
+            "metric_name": "SIXMWT_METERS",
+            "variable_type": "float",
+            "description": "The 6-minute walk test (6MWT) is a sub-maximal exercise test that assesses aerobic capacity and endurance. During the test, you walk as far as you can in six minutes. The 6MWT can be used in preschool children (2-5 years), children (6-12 years) adults (18-64 years), elderly adults (65+) with a range of diagnoses. Also checks for balance, postural deficits, gait etc."
+        }
+    ],
+    "Motor_UE_and_LE": [
+        {
+            "metric_name": "FMA_TOTAL",
+            "variable_type": "int",
+            "description": "Fugl Meyer Assessment All Domains Total Score. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients. The Five domains assessed include 1) Motor function (UE maximum score = 66; LE maximum score = 34); 2) Sensory function (maximum score = 24); 3) Balance (maximum score = 14); 4) Joint range of motion (maximum score = 44); 5) Joint pain (maximum score = 44). Scoring: 0-226 (all domains)"
+        },
+        {
+            "metric_name": "FM_TOTAL",
+            "variable_type": "int",
+            "description": "Fugl Meyer Assessment Motor Component Total Score. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients. Combines score for upper extremity (UE) and lower extremity (LE). UE score ranges from 0-66, while LE score ranges from 0-34."
+        },
+        {
+            "metric_name": "FM_TOTAL_NORM",
+            "variable_type": "float",
+            "description": "Fugl Meyer Assessment Motor Component Normalized Score. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients. Combines score for upper extremity (UE) and lower extremity (LE), then normalizes by dividing by maximum possible score. UE score ranges from 0-66, while LE score ranges from 0-34."
+        },
+        {
+            "metric_name": "MOTRICITY_ARM_LEG_AFFECTED",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "MOTRICITY_ARM_LEG_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        }
+    ],
+    "Motor_Upper_Extremity": [
+        {
+            "metric_name": "ARAT_NORM",
+            "variable_type": "float",
+            "description": "The Action Research Arm Test (ARAT) is a 19-item measure aimed at assessing functional performance of the upper extremity through observational means. Normalized Score: 0-1"
+        },
+        {
+            "metric_name": "ARAT_TOTAL",
+            "variable_type": "int",
+            "description": "The Action Research Arm Test (ARAT) is a 19-item measure aimed at assessing functional performance of the upper extremity through observational means. Score: 0-57"
+        },
+        {
+            "metric_name": "BBT_AFFECTED",
+            "variable_type": "float",
+            "description": "Box and Block Test: assesses unilateral gross manual dexterity. Also checks for Activities of Daily Living, Coordination, Dexterity, Upper Extremity Function. Score is based on no. of blocks transferred in 60 seconds. Average of the trials Scoring - e.g. can be integer (46) or decimal (46.5)"
+        },
+        {
+            "metric_name": "BBT_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Box and Block Test: assesses unilateral gross manual dexterity. Also checks for Activities of Daily Living, Coordination, Dexterity, Upper Extremity Function. Score is based on no. of blocks transferred in 60 seconds. Average of the trials Scoring - e.g. can be integer (46) or decimal (46.5)"
+        },
+        {
+            "metric_name": "BBT_NORM",
+            "variable_type": "float",
+            "description": "Box and Block Test: assesses unilateral gross manual dexterity. Also checks for Activities of Daily Living, Coordination, Dexterity, Upper Extremity Function. Score is based on no. of blocks transferred in 60 seconds. Average of the trials Normalized Score: 0-1"
+        },
+        {
+            "metric_name": "CMEP_IPSILESIONAL_BICEP",
+            "variable_type": "float",
+            "description": "Ipsilesional (same-side) compound motor evoked potential (cMEP) from the Biceps using Transcranial Magnetic Stimulation (TMS). value = root mean square of amplitude"
+        },
+        {
+            "metric_name": "CMEP_IPSILESIONAL_FDI",
+            "variable_type": "float",
+            "description": "Ipsilesional (same-side) compound motor evoked potential (cMEP) from the First Dorsal interosseous (FDI) using Transcranial Magnetic Stimulation (TMS). Value = root mean square of the amplitude"
+        },
+        {
+            "metric_name": "EDINBURGH_HANDEDNESS",
+            "variable_type": "float",
+            "description": "The Edinburgh Handedness Inventory (EHI), sometimes referred to as the Edinburgh Handedness Questionnaire (EHQ), objectively ascertains the handedness of a subject in activities of daily living (ADL). Most commonly used screening tool for handedness in stroke. Scoring : -100 = pure left handed, +100 = pure right handed"
+        },
+        {
+            "metric_name": "FINGERTAP_AFFECTED",
+            "variable_type": "float",
+            "description": "Assessment of dexterity, patient is asked to finger tap for around 10 to 15 seconds for as quickly and widely as they can. A = Affected side"
+        },
+        {
+            "metric_name": "FINGERTAP_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Assessment of dexterity, patient is asked to finger tap for around 10 to 15 seconds for as quickly and widely as they can. NA = Non-Affected side"
+        },
+        {
+            "metric_name": "FMUE_ARM_TOTAL",
+            "variable_type": "int",
+            "description": "Arm category of the Fugl Meyer Assessment Motor Component for the Upper Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FMUE_COORDINATION",
+            "variable_type": "int",
+            "description": "Coordination category of the Fugl Meyer Assessment Motor Component for the Lower Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FMUE_HAND_TOTAL",
+            "variable_type": "int",
+            "description": "Hand category of the Fugl Meyer Assessment Motor Component for the Upper Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FMUE_TOTAL",
+            "variable_type": "int",
+            "description": "Fugl Meyer Assessment Motor Component for the Upper Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FMUE_TOTAL_NORM",
+            "variable_type": "float",
+            "description": "Normalized Fugl Meyer Assessment Motor Component for the Upper Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FMUE_WRIST_HAND_TOTAL",
+            "variable_type": "int",
+            "description": "Combined Write + Hand category of the Fugl Meyer Assessment Motor Component for the Upper Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "FMUE_WRIST_TOTAL",
+            "variable_type": "int",
+            "description": "Wrist category of the Fugl Meyer Assessment Motor Component for the Upper Extremity. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients."
+        },
+        {
+            "metric_name": "GRIP_AFFECTED",
+            "variable_type": "float",
+            "description": "Grip measured by the dynamometer. Value in kgs"
+        },
+        {
+            "metric_name": "GRIP_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Grip measured by the dynamometer, on the non-affected side. Value in kgs"
+        },
+        {
+            "metric_name": "GRIP_NORM",
+            "variable_type": "float",
+            "description": "Normed grip value"
+        },
+        {
+            "metric_name": "MAS",
+            "variable_type": "int",
+            "description": "The modified Ashworth scale is a muscle tone assessment scale used to assess the resistance experienced during passive range of motion. Score/rating: 0-4"
+        },
+        {
+            "metric_name": "MAS_BICEPS",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_DELTOID",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_ELBOW_FLEX",
+            "variable_type": "int",
+            "description": ""
+        },
+        {
+            "metric_name": "MAS_FINGER",
+            "variable_type": "int",
+            "description": "Finger component of the modified Ashworth scale"
+        },
+        {
+            "metric_name": "MAS_FINGER_EXT",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_FINGER_FLEX",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_PRONATOR",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_SHOULDER",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_THUMB",
+            "variable_type": "int",
+            "description": "Thumb component of the modified Ashworth scale"
+        },
+        {
+            "metric_name": "MAS_TRICEPS",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_WRIST",
+            "variable_type": "int",
+            "description": "Wrist component of the modified Ashworth scale"
+        },
+        {
+            "metric_name": "MAS_WRIST_EXT",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MAS_WRIST_FLEX",
+            "variable_type": "int",
+            "description": "MAS: Modifieid Aschworth Scale is an assessment that is used to measure the increase in muscle tone. Grading: 0, 1, 1.5 2, 3, 4 and 5 (rigidity or contracture). It can be assessed for different muscle groups"
+        },
+        {
+            "metric_name": "MEP_STATUS",
+            "variable_type": "int",
+            "description": "MEP: Presence of Motor Evoked Potential (0 = absent, 1 = present)"
+        },
+        {
+            "metric_name": "MOTOR_ACT_LOG",
+            "variable_type": "int",
+            "description": "The MAL is a semi-structured interview to assess arm function. MAL 28 assesses using 28 functional tasks. Scoring is on a 5-point scale."
+        },
+        {
+            "metric_name": "MOTOR_ACT_LOG_MEAN",
+            "variable_type": "float",
+            "description": "Mean of the Motor Activity Log"
+        },
+        {
+            "metric_name": "MOTOR_SEQUENCIES",
+            "variable_type": "int",
+            "description": "Test for upper limb apraxia"
+        },
+        {
+            "metric_name": "MOTRICITY_ARM_AFFECTED",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "MOTRICITY_ARM_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "MOTRICITY_INDEX",
+            "variable_type": "float",
+            "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "MRC_BICEPS",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_DELTOID",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_ECU",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_FINGER_EXT",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_FINGER_FLEX",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_INTEROS",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_TRICEPS",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_WRIST_EXT",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRC_WRIST_FLEX",
+            "variable_type": "int",
+            "description": "The Medical Research Council (MRC) Scale for Muscle Strength is a commonly used scale for assessing muscle strength from Grade 5 (normal) to Grade 0 (no visible contraction). Cna be used for different muscle groups in the upper and lower extremity. Scoring: 0.0 - 5.0"
+        },
+        {
+            "metric_name": "MRS_PRE",
+            "variable_type": "int",
+            "description": "Modified Rankin Scale score on pre-admission. The Modified Rankin Scale (mRS) is used to measure the degree of disability in patients who have had a stroke. Higher scores indicates more global disability. Scoring: 0-6 (latest version)"
+        },
+        {
+            "metric_name": "NEGLECT",
+            "variable_type": "int",
+            "description": "Presence of unilateral neglect (0 = absent, 1 = present)"
+        },
+        {
+            "metric_name": "NINE_HOLE_PEG_AFFECTED",
+            "variable_type": "float",
+            "description": "Nine Hole Peg Test for the Affected side. The Nine Hole Peg Test (NHPT) was developed to measure finger dexterity, also known as fine manual dexterity. The NHPT is composed of a square board with 9 pegs. Scoring: time taken (in seconds) to complete the activity."
+        },
+        {
+            "metric_name": "NINE_HOLE_PEG_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Nine Hole Peg Test for the Non-affected side. The Nine Hole Peg Test (NHPT) was developed to measure finger dexterity, also known as fine manual dexterity. The NHPT is composed of a square board with 9 pegs. Scoring: time taken (in seconds) to complete the activity."
+        },
+        {
+            "metric_name": "NORMED_MOTOR",
+            "variable_type": "float",
+            "description": "Normed value for Motor scales scores"
+        },
+        {
+            "metric_name": "NORMED_MOTOR_CTRL",
+            "variable_type": "float",
+            "description": "Normed value for Motor scales scores for the control group"
+        },
+        {
+            "metric_name": "NORMED_MOTOR_SOURCE",
+            "variable_type": "string",
+            "description": "Description of the source of calculation for normed motor score (e.g. FMUE, Box and blocks test)"
+        },
+        {
+            "metric_name": "PEGBOARD_GROOVED",
+            "variable_type": "float",
+            "description": "The Grooved Pegboard Test (GPT) is used primarily as a measure of motor functioning. Manipulative dexterity, including finger speed, is assesse. Total score = time in seconds"
+        },
+        {
+            "metric_name": "PEGBOARD_PURDUE_AFFECTED",
+            "variable_type": "float",
+            "description": "Measures fine and gross motor dexterity and coordination in the upper extremity. Scoring is measured by time in seconds for right, left, both hands and assembly of the different washers/ pegs."
+        },
+        {
+            "metric_name": "PEGBOARD_PURDUE_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Measures fine and gross motor dexterity and coordination in the upper extremity. Scoring is measured by time in seconds for right, left, both hands and assembly of the different washers/ pegs."
+        },
+        {
+            "metric_name": "PINCH_AFFECTED",
+            "variable_type": "float",
+            "description": "Pinch strength of the affected side (in kgs)"
+        },
+        {
+            "metric_name": "PINCH_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Pinch strength of the non-affected side (in kgs)"
+        },
+        {
+            "metric_name": "PINCH_NORM",
+            "variable_type": "float",
+            "description": "Normed value of the pinch strength"
+        },
+        {
+            "metric_name": "REPAS_AFFECTED",
+            "variable_type": "int",
+            "description": "Summary rating scale for resistance to passive movement.REPAS is based on the Ashworth scale, a common clinical standard measure of spasticity in patients with central paresis"
+        },
+        {
+            "metric_name": "REPAS_NON_AFFECTED",
+            "variable_type": "int",
+            "description": "Summary rating scale for resistance to passive movement.REPAS is based on the Ashworth scale, a common clinical standard measure of spasticity in patients with central paresis"
+        },
+        {
+            "metric_name": "RITHMS_TEST",
+            "variable_type": "int",
+            "description": "Site does not provide description, also unable to find"
+        },
+        {
+            "metric_name": "SIS_HAND_FUNC",
+            "variable_type": "int",
+            "description": "Hand Functions domain of the Stroke Impact Scale. The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "SIS_HAND_FUNC_NORM",
+            "variable_type": "float",
+            "description": "Normed value of Hand functions domain of the Stroke Impact Scale. The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "SIS_HAND_FUNC_NORM_PERCENTILE",
+            "variable_type": "float",
+            "description": "Normed value of Hand functions domain of the Stroke Impact Scale, reported as a percentage. The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "SIS_HAND_MEAN",
+            "variable_type": "float",
+            "description": "Mean value of Hand functions domain of the Stroke Impact Scale. The Stroke Impact Scale (SIS) is a self-report questionnaire that evaluates disability and health-related quality of life after stroke. 8 domains assessed: 1) Strength (4 items); 2) Hand function (5 items); 3) ADL/IADL (10 items); 4) Mobility (9 items); 5) Communication (7 items); 6) Emotion (9 items); 7) Memory and thinking (7 items); 8) Participation/Role function (8 items)"
+        },
+        {
+            "metric_name": "WMFT_FAS",
+            "variable_type": "int",
+            "description": "FAS: Functional Ability Scale of the Wolf Motor Function Test"
+        },
+        {
+            "metric_name": "WMFT_FAS_MEAN",
+            "variable_type": "float",
+            "description": "Mean values of the Functional Ability Scale of the Wolf Motor Function Test"
+        },
+        {
+            "metric_name": "WMFT_FAS_NORM",
+            "variable_type": "float",
+            "description": "Normed values of the Functional Ability Scale of the Wolf Motor Function Test"
+        },
+        {
+            "metric_name": "WMFT_HAND_15_FAS_MEAN",
+            "variable_type": "float",
+            "description": "Mean values of the Functional Ability Scale of the Wolf Motor Function Test -15 item"
+        },
+        {
+            "metric_name": "WMFT_HAND_15_TIME_SUM_AFFECTED",
+            "variable_type": "float",
+            "description": "Completion time sum of the affected side for Wolf Motor Function Test -15 item"
+        },
+        {
+            "metric_name": "WMFT_HAND_15_TIME_SUM_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "Completion time sum of the non-affected side for Wolf Motor Function Test -15 item"
+        },
+        {
+            "metric_name": "WMFT_REPS_MIN_AFFECTED",
+            "variable_type": "float",
+            "description": "WMFT: Wolf Motor Function Test: This test was designed to assess the motor ability of patients with moderate to severe upper extremity motor deficits in the laboratory and clinic. Time taken by the affected side?"
+        },
+        {
+            "metric_name": "WMFT_REPS_MIN_NON_AFFECTED",
+            "variable_type": "float",
+            "description": "WMFT: Wolf Motor Function Test: This test was designed to assess the motor ability of patients with moderate to severe upper extremity motor deficits in the laboratory and clinic. Time taken by the non-affected side?"
+        },
+        {
+            "metric_name": "WMFT_TIME",
+            "variable_type": "float",
+            "description": "Time taken for the Wolf Motor Function Test subcomponents"
+        },
+        {
+            "metric_name": "WMFT_TIME_LOG",
+            "variable_type": "float",
+            "description": "Time log values of Wolf Motor Function Test"
+        },
+        {
+            "metric_name": "WMFT_TIME_MEAN",
+            "variable_type": "float",
+            "description": "Mean time values of the the Wolf Motor Function Test"
+        }
+    ],
+    "Other": [
+        {
+            "metric_name": "FAZEKAS_DWM",
+            "variable_type": "int",
+            "description": "Deep white matter T2 hyperintensities according to the Fazekas scale."
+        },
+        {
+            "metric_name": "FAZEKAS_PVWM",
+            "variable_type": "int",
+            "description": "Periventricular white matter T2 hyperintensities according to the Fazekas scale."
+        },
+        {
+            "metric_name": "SCAN_DATE_1",
+            "variable_type": "string",
+            "description": "Date of first scan"
+        },
+        {
+            "metric_name": "SCAN_DATE_2",
+            "variable_type": "string",
+            "description": "Date of second scan"
+        }
+    ],
+    "Psychosocial": [
+        {
+            "metric_name": "BECK_DEPRESSION_PSYC",
+            "variable_type": "int",
+            "description": "The Beck Depression Inventory (BDI) is a 21-item, self-report rating inventory that measures characteristic attitudes and symptoms of depression. Scoring: 0-15"
+        },
+        {
+            "metric_name": "BECK_DEPRESSION_SOM",
+            "variable_type": "int",
+            "description": "The Beck Depression Inventory (BDI) is a 21-item, self-report rating inventory that measures characteristic attitudes and symptoms of depression. Scoring: 0-15"
+        },
+        {
+            "metric_name": "BECK_DEPRESSION_TOTAL",
+            "variable_type": "int",
+            "description": "Beck Depression Inventory (BDI): Total of depression and SOM components"
+        },
+        {
+            "metric_name": "DAS21_A",
+            "variable_type": "float",
+            "description": "ADASS21 refers to the Depression, Anxiety and Stress Scale (DASS-21). The DASS-21 is a 21-item self-report questionnaire that measures the severity of symptoms related to depression, anxiety, and stress in the past week."
+        },
+        {
+            "metric_name": "DAS21_D",
+            "variable_type": "int",
+            "description": "ADASS21 refers to the Depression, Anxiety and Stress Scale (DASS-21). The DASS-21 is a 21-item self-report questionnaire that measures the severity of symptoms related to depression, anxiety, and stress in the past week."
+        },
+        {
+            "metric_name": "DAS21_S",
+            "variable_type": "int",
+            "description": "Stress subscale from the Depression Anxiety Stress Scale-21 items. Direct score."
+        },
+        {
+            "metric_name": "FBI_TOTAL",
+            "variable_type": "int",
+            "description": "FBI: Frontal Behavioral Inventory is a 24-item inventory designed to assess behavior and personality changes associated with the behavioral variant of frontotemporal dementia via caregiver report. Item-level scores: (0 = never, 1 = mild or occasional, 2 = moderate, 3 = severe or very frequent)"
+        },
+        {
+            "metric_name": "GDS",
+            "variable_type": "int",
+            "description": "GDS: Geriatric Depression Scale - Assesses depression and suicide ideation in elderly individuals. Scoring: 0-30. Score greater than 11 indicates depression"
+        },
+        {
+            "metric_name": "HAM_ANXIETY_TOTAL",
+            "variable_type": "int",
+            "description": "Hamilton Anxiety Rating Scale (HAM-A). The HAM-A measures the severity of anxiety symptoms. Total score: 0-56, where <17 indicates mild severity, 18-24 mild to moderate severity and 25-30 moderate to severe."
+        },
+        {
+            "metric_name": "HAM_DEPRESSION_TOTAL",
+            "variable_type": "int",
+            "description": "Hamilton Depression Rating Scale (HAM-D). The HAM-D is a clinician-administered depression assessment scale. Scoring interpretation: 0-7 suggests no depression, 8-16 suggests mild depression, 17-23 suggests moderate depression and scores over 24 suggest severe depression."
+        },
+        {
+            "metric_name": "HAM_PSYCH",
+            "variable_type": "int",
+            "description": "Psychic component of the Hamilton Depression Scale (HAM-D). The HAM-D is a clinician-administered depression assessment scale."
+        },
+        {
+            "metric_name": "HAM_SOMATIC",
+            "variable_type": "int",
+            "description": "Somatic component of the Hamilton Depression Scale (HAM-D). The HAM-D is a clinician-administered depression assessment scale."
+        },
+        {
+            "metric_name": "MOOD_GAD7",
+            "variable_type": "int",
+            "description": "GAD: GENERALISED ANXIETY DISORDER QUESTIONNAIRE 7-ITEM"
+        },
+        {
+            "metric_name": "MOOD_PHQ9",
+            "variable_type": "int",
+            "description": "PHQ: PATIENT HEALTH QUESTIONNAIRE 9-ITEM: Assessment for Mood"
+        },
+        {
+            "metric_name": "STARKSTEIN_APATHY",
+            "variable_type": "int",
+            "description": "The Starkstein apathy scale (SAS) has been reported to be the optimal psychological tool for the assessment of apathy in patients. 14 and 18 item versions are available"
+        },
+        {
+            "metric_name": "TAS_20",
+            "variable_type": "int",
+            "description": "The Toronto Alexithymia Scale (TAS-20) is a 20-item, self-administered questionnaire that measures difficulty in identifying and describing emotions, which is a big part of alexithymia."
+        },
+        {
+            "metric_name": "TAS_20_DDF",
+            "variable_type": "int",
+            "description": "TAS 20: Difficulty describing feelings component"
+        },
+        {
+            "metric_name": "TAS_20_DIF",
+            "variable_type": "int",
+            "description": "TAS 20: Difficulty identifying feelings component"
+        },
+        {
+            "metric_name": "TAS_20_EOT",
+            "variable_type": "int",
+            "description": "TAS 20: Externally oriented thinking component"
+        }
+    ],
+    "Sensory": [
+        {
+            "metric_name": "MONOFILAMENT_INDEX",
+            "variable_type": "float",
+            "description": "A test done to check for peripheral nerve damage and sensory testing. The filaments are classified from grade 1 to 5 according to their thickness: 1.65-2.83 = grade 5, 3.22-3.61 = grade 4, 3.84-4.31 = grade 3, 4.56-6.45 = grade 2, and 6.65 = grade 1."
+        },
+        {
+            "metric_name": "MONOFILAMENT_LITTLEFINGER",
+            "variable_type": "float",
+            "description": "A test done to check for peripheral nerve damage and sensory testing. The filaments are classified from grade 1 to 5 according to their thickness: 1.65-2.83 = grade 5, 3.22-3.61 = grade 4, 3.84-4.31 = grade 3, 4.56-6.45 = grade 2, and 6.65 = grade 1."
+        },
+        {
+            "metric_name": "MONOFILAMENT_THUMB",
+            "variable_type": "float",
+            "description": "A test done to check for peripheral nerve damage and sensory testing. The filaments are classified from grade 1 to 5 according to their thickness: 1.65-2.83 = grade 5, 3.22-3.61 = grade 4, 3.84-4.31 = grade 3, 4.56-6.45 = grade 2, and 6.65 = grade 1."
+        },
+        {
+            "metric_name": "TWO_PT_INDEX",
+            "variable_type": "int",
+            "description": "Two point discrimination test for sensory discrimination of two points Normal - less than 6mm. Fair - 6 to 10mm. Poor - 11 to 15mm. Protective - one point perceived. Anesthetic - no points perceived."
+        },
+        {
+            "metric_name": "TWO_PT_LITTLEFINGER",
+            "variable_type": "int",
+            "description": "Two point discrimination test for sensory discrimination of two points Normal - less than 6mm. Fair - 6 to 10mm. Poor - 11 to 15mm. Protective - one point perceived. Anesthetic - no points perceived."
+        },
+        {
+            "metric_name": "TWO_PT_THUMB",
+            "variable_type": "int",
+            "description": "Two point discrimination test for sensory discrimination of two points Normal - less than 6mm. Fair - 6 to 10mm. Poor - 11 to 15mm. Protective - one point perceived. Anesthetic - no points perceived."
+        }
+    ]
+}
