@@ -8,6 +8,14 @@ app_mode = os.getenv('FLASK_APP_MODE', 'user')
 application = Flask(__name__, static_folder='static/build')
 CORS(application)
 
+@application.route('/', defaults={'path': ''})
+@application.route('/<path:path>')
+@cross_origin()
+def form(path):
+    if path:
+        return send_from_directory(application.static_folder , path)
+    return send_from_directory(application.static_folder , 'index.html')
+
 @application.route('/config', methods=['GET'])
 @cross_origin()
 def get_config():
