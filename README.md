@@ -36,12 +36,12 @@ source venv/bin/activate
 
 **Install Dependencies**: Run the following command in your terminal to install the necessary Python libraries:
 
-    ```bash
-    pip install -r requirements.txt
-    cd react-data-request-form
-    npm install
-    npm run build
-    ```
+```bash
+pip install -r requirements.txt
+cd react-data-request-form
+npm install
+npm run build
+```
 
 ## Running the Application
 
