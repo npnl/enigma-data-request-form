@@ -1,5 +1,5 @@
 import { DataRequestsResponse, DataRequestIn, DataRequestOut } from "../types/DataRequest";
-import { DataSummaries, FetchDataResponse } from "../types/DataTypes";
+import { DataFrame, DataSummaries, FetchDataResponse } from "../types/DataTypes";
 import HttpClient from "./HttpClient";
 
 
@@ -24,14 +24,29 @@ const getData = async (data: DataRequestOut) => {
     return response;
 }
 
-const fetchDataAndSummary = async (fileName: string) => {
+const fetchDataAndSummary = async (data: DataRequestOut) => {
+    const response = await HttpClient.post<DataSummaries>('data-summary', data);
+    return response
+}
+
+const fetchDataAndSummaryByFilename = async (fileName: string) => {
     const response = await HttpClient.get<DataSummaries>(`data-summary/${fileName}`);
     return response
 }
 
+const fetchBooleanData = async () => {
+    const response = await HttpClient.get<DataFrame>('boolean-data');
+    return response
+}
+
+
+
 export default {
     fetchRequests,
+    // getData,
     submitRequest,
     fetchRequest,
-    fetchDataAndSummary
+    fetchDataAndSummary,
+    fetchDataAndSummaryByFilename,
+    fetchBooleanData
 };

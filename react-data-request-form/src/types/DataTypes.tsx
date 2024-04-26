@@ -12,6 +12,8 @@ export interface FetchDataResponse {
     data: DataFrame;
 }
 
+
+
 export interface DataSummaries {
     data: DataFrame;
     imagingDataBySite: DataFrame;

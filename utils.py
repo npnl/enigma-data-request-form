@@ -65,6 +65,10 @@ class BooleanData:
         return cls.data.dropna(subset=cols)
 
     @classmethod
+    def getData(cls, staticPath):
+        return cls._get_data(staticPath)
+        
+    @classmethod
     def applyFiltersAndGetCount(cls, staticPath, cols, session='baseline'):
         data = cls._get_data(staticPath).dropna(subset=cols)
         if session == 'baseline':
@@ -76,7 +80,8 @@ class BooleanData:
             return len(data)
         # return data[data['SES'] == 'ses-1'] if session == 'baseline' else data
 
-
+def get_boolean_data_from_file(staticPath):
+    return BooleanData.getData(staticPath).to_json(orient='records')
 
 def get_data(behavior_filters):
     cols_of_interest = set(['BIDS_ID','SES','AGE','SEX'])
@@ -301,8 +306,7 @@ def upload_file_to_s3(file_name, content, object_name=None):
 
     # Upload the file
     s3_client = boto3.client('s3', aws_access_key_id=PROD_ACCESS_KEY, aws_secret_access_key=PROD_SECRET_KEY, region_name='us-east-1')
-    # Local_Secret_key = GTXhqfbSAFyZZkxsLUWi2lb0LvaSyheHAypLJmF+
-    #  Local_access_key = AKIATSAG2FXKXEKEOUUU
+
     try:
         response2 = s3_client.put_object(Bucket=BUCKET_NAME, Key='data-requests/' + object_name, Body=content)
         return True, "Success"

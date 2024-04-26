@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import ApiUtils from '../api/ApiUtils';
-import { DataRequestIn } from '../types/DataRequest';
+import { DataRequestIn, DataRequestOut } from '../types/DataRequest';
 import { DataFrame, DataSummaries } from '../types/DataTypes';
 
 
@@ -32,11 +32,23 @@ interface RequestsState {
     }
   );
 
-  export const fetchDataSummary = createAsyncThunk(
-    'requests/fetchDataSummary',
+  export const fetchDataAndSummary= createAsyncThunk(
+    'requests/fetchDataAndSummary',
+    async (data: DataRequestOut, { rejectWithValue }) => {
+        try {
+          const response = await ApiUtils.fetchDataAndSummary(data);
+          return response; 
+        } catch (error) {
+          return rejectWithValue(error); 
+        }
+      }
+    );
+
+  export const fetchDataAndSummaryByFilename = createAsyncThunk(
+    'requests/fetchDataAndSummaryByFilename',
     async (fileName: string, { rejectWithValue }) => {
         try {
-          const response = await ApiUtils.fetchDataAndSummary(fileName);
+          const response = await ApiUtils.fetchDataAndSummaryByFilename(fileName);
           return response; 
         } catch (error) {
           return rejectWithValue(error); 
@@ -51,6 +63,10 @@ interface RequestsState {
       setFilename(state, action: PayloadAction<string>) {
         state.fileName = action.payload;
       },
+      setDataSummary(state, action: PayloadAction<DataSummaries>) {
+        state.dataSummary = action.payload;
+        state.isFormSummaryLoading = false;
+      }
     },
     extraReducers: (builder) => {
       builder
@@ -64,18 +80,28 @@ interface RequestsState {
         .addCase(fetchFormSummary.rejected, (state) => {
           state.isFormSummaryLoading = false;
         })
-        .addCase(fetchDataSummary.pending, (state) => {
+        .addCase(fetchDataAndSummaryByFilename.pending, (state) => {
             state.isDataSummaryLoading = true;
           })
-          .addCase(fetchDataSummary.fulfilled, (state, action) => {
+          .addCase(fetchDataAndSummaryByFilename.fulfilled, (state, action) => {
             state.dataSummary = action.payload;
             state.isDataSummaryLoading = false;
           })
-          .addCase(fetchDataSummary.rejected, (state) => {
+          .addCase(fetchDataAndSummaryByFilename.rejected, (state) => {
+            state.isDataSummaryLoading = false;
+          })
+          .addCase(fetchDataAndSummary.pending, (state) => {
+            state.isDataSummaryLoading = true;
+          })
+          .addCase(fetchDataAndSummary.fulfilled, (state, action) => {
+            state.dataSummary = action.payload;
+            state.isDataSummaryLoading = false;
+          })
+          .addCase(fetchDataAndSummary.rejected, (state) => {
             state.isDataSummaryLoading = false;
           });
     },
   });
   
-  export const { setFilename } = requestsSlice.actions;
+  export const { setFilename, setDataSummary } = requestsSlice.actions;
   export default requestsSlice.reducer;

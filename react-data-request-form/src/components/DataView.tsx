@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useAppDispatch } from "../hooks";
 import {
-  fetchDataSummary,
+  fetchDataAndSummaryByFilename,
   fetchFormSummary,
   setFilename,
 } from "../redux/requestsSlice";
@@ -27,7 +27,7 @@ const DataView: React.FC = ({}) => {
         if (fileNameParam && fileName != fileNameParam) {
           dispatch(setFilename(fileNameParam));
           dispatch(fetchFormSummary(fileNameParam));
-          dispatch(fetchDataSummary(fileNameParam));
+          dispatch(fetchDataAndSummaryByFilename(fileNameParam));
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -48,6 +48,7 @@ const DataView: React.FC = ({}) => {
     );
   }
 
+  console.log(dataSummary)
   return (
     <>
       {dataSummary?.data && (

@@ -6,7 +6,7 @@ import { useAppDispatch } from "../../hooks";
 import {
   fetchFormSummary,
   setFilename,
-  fetchDataSummary,
+  fetchDataAndSummaryByFilename,
 } from "../../redux/requestsSlice";
 import { RootState } from "../../redux/store";
 import { DataSummary } from "./DataSummaries";
@@ -33,7 +33,7 @@ const Summary: React.FC = ({}) => {
         if (fileName) {
           dispatch(setFilename(fileName));
           dispatch(fetchFormSummary(fileName));
-          dispatch(fetchDataSummary(fileName));
+          dispatch(fetchDataAndSummaryByFilename(fileName));
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);

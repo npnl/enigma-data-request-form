@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from './redux/store';
-import { fetchMetrics, updateRowCount } from './redux/metricsSlice';
+import { fetchMetrics, updateRowCount, fetchBooleanData } from './redux/metricsSlice';
 
 import NavBar from './components/NavBar';
 import DataView from './components/DataView';
@@ -17,7 +17,7 @@ function App() {
 
   useEffect(() => {
     dispatch(fetchMetrics());
-    dispatch(updateRowCount());
+    dispatch(fetchBooleanData())
   }, [dispatch]);
 
   console.log(env);
@@ -32,6 +32,7 @@ function App() {
           <Route path="/request-form" element={<DataForm />} />
           <Route path="/view-requests" element={<RequestsTable />} />
           <Route path="/request-summary/:fileName" element={<Summary/>} />
+          <Route path="/view-data" element={<DataView/>} />
           <Route path="/view-data/:fileNameParam" element={<DataView/>} />
           {/* Add new routes here as needed */}
         </Routes>

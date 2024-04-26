@@ -10,7 +10,7 @@ export interface DataRequestIn {
 }
 
 export interface DataRequestOut {
-    requestor: User;
+    requestor: User | undefined;
     timepoint: Timepoint;
     behavior: { [key: string]: MetricOut };
     imaging: { [key: string]: MetricOut };

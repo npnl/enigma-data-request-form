@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_from_directory, request, jsonify, session, url_for, Response
 from flask_cors import CORS, cross_origin  # Import CORS
 import json, os
-from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email
+from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file
 
     
 app_mode = os.getenv('FLASK_APP_MODE', 'user')
@@ -74,6 +74,16 @@ def get_rows_count():
         return jsonify({'count': result['count']}), 200
     return jsonify({'error': 'Error'}), 500
 
+@application.route('/boolean-data', methods=['GET', 'OPTIONS'])
+@cross_origin()
+def get_boolean_data():
+    if request.method == 'OPTIONS':
+        # Specific handling for preflight request if needed
+        return _build_cors_preflight_response()
+    staticPath = application.static_folder
+    result = get_boolean_data_from_file(staticPath)
+    return result
+
 @application.route('/metrics', methods=['GET', 'OPTIONS'])
 @cross_origin()
 def get_metrics():
@@ -129,9 +139,21 @@ def get_request_data(filename):
     else:
         return jsonify({'error': 'Invalid operation'}), 401
     
+@application.route('/data-summary', methods=['POST'])
+@cross_origin()
+def get_data_and_summary():
+    response = {}
+    if app_mode == 'admin':
+        data = json.loads(request.data)
+        response = get_summarized_data(data)
+        json_data = json.dumps(response, default=str)
+        return json_data, 200
+    else:
+        return jsonify({'error': 'Invalid operation'}), 401
+    
 @application.route('/data-summary/<filename>')
 @cross_origin()
-def get_data_and_summary(filename):
+def get_data_and_summary_by_filename(filename):
     response = {}
     if app_mode == 'admin':
         data_request = get_request_data_from_storage(filename)
@@ -140,6 +162,7 @@ def get_data_and_summary(filename):
         return json_data, 200
     else:
         return jsonify({'error': 'Invalid operation'}), 401
+
     
 @application.route('/send-email', methods=['GET'])
 @cross_origin()
