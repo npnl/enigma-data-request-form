@@ -1,5 +1,5 @@
 import { DataRequestsResponse, DataRequestIn, DataRequestOut } from "../types/DataRequest";
-import { DataFrame, DataSummaries, FetchDataResponse } from "../types/DataTypes";
+import { AuthorsOptions, DataFrame, DataSummaries, FetchDataResponse, FormattedAuthorsRequest, FormattedAuthorsResponse } from "../types/DataTypes";
 import HttpClient from "./HttpClient";
 
 
@@ -39,6 +39,17 @@ const fetchBooleanData = async () => {
     return response
 }
 
+const fetchAuthorsData = async () => {
+    const response = await HttpClient.get<AuthorsOptions>('get-authors-list');
+    return response
+}
+
+const fetchFormattedAuthors = async (formattedAuthorsRequest: FormattedAuthorsRequest) => {
+    const response = await HttpClient.post<FormattedAuthorsResponse>('formatted-authors', formattedAuthorsRequest);
+    return response
+
+}
+
 
 
 export default {
@@ -48,5 +59,7 @@ export default {
     fetchRequest,
     fetchDataAndSummary,
     fetchDataAndSummaryByFilename,
-    fetchBooleanData
+    fetchBooleanData,
+    fetchAuthorsData,
+    fetchFormattedAuthors
 };

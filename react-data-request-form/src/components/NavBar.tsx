@@ -31,11 +31,18 @@ const NavBar = () => {
         </Link>
       </li>
       {env.USER_MODE && env.USER_MODE === 'admin' && (
+        <>
         <li className="nav-item">
           <Link className="nav-link" to="/view-requests">
             View Requests
           </Link>
         </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/authors-list">
+            Authors List
+          </Link>
+        </li>
+        </>
       )}
     </ul>
   </div>

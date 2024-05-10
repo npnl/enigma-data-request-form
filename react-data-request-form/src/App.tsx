@@ -11,6 +11,7 @@ import RequestsTable from './components/RequestsTable';
 import Modal from './components/Modal/Modal';
 import env from './config'
 import Summary from './components/RequestSummary/Summary';
+import AuthorsList from './components/AuthorsList';
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,6 +35,7 @@ function App() {
           <Route path="/request-summary/:fileName" element={<Summary/>} />
           <Route path="/view-data" element={<DataView/>} />
           <Route path="/view-data/:fileNameParam" element={<DataView/>} />
+          <Route path="/authors-list" element={<AuthorsList/>} />
           {/* Add new routes here as needed */}
         </Routes>
         <Modal />

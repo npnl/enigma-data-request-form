@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_from_directory, request, jsonify, session, url_for, Response
 from flask_cors import CORS, cross_origin  # Import CORS
 import json, os
-from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file
+from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file, get_authors_list, get_formatted_authors_response
 
     
 app_mode = os.getenv('FLASK_APP_MODE', 'user')
@@ -170,6 +170,29 @@ def send_email_to():
     print('sending')
     response = send_email('lmuthyal@usc.edu')
     return jsonify({'error': 'Invalid operation', 'response': response}), 200
+
+@application.route('/get-authors-list', methods=['GET', 'OPTIONS'])
+@cross_origin()
+def fetch_authors_list():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    if app_mode == 'admin':
+        response = get_authors_list()
+        # json_data = json.dumps(response, default=str)
+        return response['data'], 200
+    else:
+        return jsonify({'error': 'Invalid operation'}), 401
+
+@application.route('/formatted-authors', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def get_formatted_authors():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    if app_mode == 'admin':
+        request_data = json.loads(request.data)
+        response_txt = get_formatted_authors_response(request_data)
+        return jsonify({'formattedAuthors': response_txt}), 200
+
 
 def _build_cors_preflight_response():
     response = jsonify({'status': 'success'})

@@ -443,4 +443,196 @@ def get_summarized_data(request):
         return response
     except Exception as e:
         print("An error occurred: ", str(e))
-       
+
+def get_unique_sites(data):
+    data = data.dropna()
+    site_set = set()
+    for site in data:
+        site_set.update(site.split(';'))
+    return list(site_set)
+
+def get_authors_list():
+    try:
+        data = pd.read_csv(f'{working_dir}/faculty/sliew/enigma/new/AuthorsList/ENIGMA_Members_List_Full_List.csv', index_col=None)
+        data.reset_index(inplace=True)
+        names = data[['index', 'First Name', 'Last Name']]
+        names.dropna(subset=['First Name', 'Last Name'], inplace=True)
+        print(names.iloc[25:30])
+        # names.drop_duplicates(subset=['First Name', 'Last Name'], inplace=True)
+        sites = get_unique_sites(data['BIDS Site'])
+        sites_df = pd.DataFrame(sites, columns=['BIDS Site'])
+        sites_df.sort_values(by='BIDS Site', inplace=True)
+        data = {'dataByAuthor': validate_data(names), 'dataBySite': validate_data(sites_df)}
+        return {'success': True, 'data' : json.dumps(data)}
+    except Exception as e:
+        print(e)
+        return {'success': False, 'data': ''}
+
+def get_all_authors_data():
+    data = pd.read_csv(f'{working_dir}/faculty/sliew/enigma/new/AuthorsList/ENIGMA_Members_List_Full_List.csv', index_col=None)
+    data.reset_index(inplace=True)
+    data = data[['index', 'First Name', 'Last Name', 'MI', 'BIDS Site', 'Department/Divison', 'University/Institute', 'City', 'State/Province', 'Country']]
+    data.dropna(subset=['First Name', 'Last Name'], inplace=True)
+    return data
+    
+def get_authors_by_site(sites):
+    data = get_all_authors_data()
+    data = data.dropna(subset=['BIDS Site'])
+    mask = data['BIDS Site'].apply(lambda x: any(site.strip() in sites for site in x.split(';')))
+    filtered_data = data[mask]
+    print(filtered_data)
+    return filtered_data
+
+def filterByIndex(data, indices):
+    mask = data['index'].isin(indices)
+    return data[mask]
+
+def get_authors_by_index(indices):
+    data = get_all_authors_data()
+    return filterByIndex(data, indices)
+
+def format_middle_initial(row):
+    middle_initial = str(row["MI"]).strip()
+    if pd.notna(row["MI"]):
+        if middle_initial[-1] == '.':
+            return middle_initial
+        else:
+            return middle_initial + '.'
+    else:
+        return np.nan
+
+
+def format_initials(row):
+    first_initial = row["First Name"][0]
+    last_initial = row["Last Name"][0]
+    middle_initial = row["middle_initial"]
+    if pd.notna(middle_initial):
+        return f'{first_initial}.{str(middle_initial)}{last_initial}.'
+    else:
+        return f'{first_initial}.{last_initial}.'
+
+def replace_common_words(department):
+    if pd.isna(department):
+        return department
+    common_words = { "&" : "and",
+                    "Dept": "Department",
+                   "Dept." : "Department",
+                   "dept": "Department",
+                   "dept.": "Department"}
+    for key in common_words.keys():
+        department = department.replace(key, common_words[key])
+    return department
+
+def format_affiliation(department, city, state, country, zipcode=''):
+    # formatted_zip = str(zipcode).split('.')[0].strip()
+    output = []
+    if pd.notna(department):
+        output.append(str(department).strip())
+    if pd.notna(city):
+        output.append(str(city).strip())
+    if pd.notna(state):
+        output.append(str(state).strip())
+    if pd.notna(country):
+        output.append(str(country).strip())
+    return ', '.join(output)
+  
+
+def get_formatted_authors_response(request_data):
+    if request_data['groupBy'] == 'bySite':
+        authors_df = get_authors_by_site(set(request_data['sites']))
+    else:
+        authors_df = get_authors_by_index(list(set(request_data['authors'] + (request_data['firstAuthors'] if request_data['firstAuthors'] else []) + (request_data['lastAuthors'] if request_data['lastAuthors'] else []))))
+    
+    FIRST_AUTHORS = request_data['firstAuthors'] if request_data['firstAuthors'] and request_data['groupBy'] == 'byAuthor' else []
+    LAST_AUTHORS = request_data['lastAuthors'] if request_data['lastAuthors'] and request_data['groupBy'] == 'byAuthor' else []
+    authors_df_first = filterByIndex(authors_df, FIRST_AUTHORS)
+    authors_df_last = filterByIndex(authors_df, LAST_AUTHORS)
+    mask = ~authors_df['index'].isin(FIRST_AUTHORS)
+    authors_df = authors_df[mask]
+    mask = ~authors_df['index'].isin(LAST_AUTHORS)
+    authors_df = authors_df[mask]
+    # authors_df.drop(FIRST_AUTHORS, inplace=True)
+    # authors_df.drop(LAST_AUTHORS, inplace=True)
+    authors_df.sort_values('Last Name', inplace=True)
+    df_authors = pd.concat([authors_df_first, authors_df, authors_df_last])
+    order = FIRST_AUTHORS + list(authors_df['index']) + LAST_AUTHORS
+    df_authors.set_index('index', inplace=True)
+    df_authors = df_authors.loc[order]
+    df_authors["middle_initial"] = df_authors.apply(lambda row: format_middle_initial(row), axis=1)
+    df_authors["initials"] = df_authors.apply(lambda row: format_initials(row), axis=1)
+    print('Department/Divison' in df_authors.columns)
+    
+    def getDepartment(row):
+        if not pd.isna(row['Department/Divison']) and not pd.isna(row['University/Institute']):
+            return str(row['Department/Divison']) + ', ' + str(row['University/Institute'])
+        elif not pd.isna(row['University/Institute']):
+            return str(row['University/Institute'])
+        elif not pd.isna(row['Department/Divison']):
+            return str(row['Department/Divison'])
+        return np.nan
+    
+    df_authors['department'] = df_authors.apply(lambda row: getDepartment(row), axis=1)
+    df_authors['department'] = df_authors.apply(lambda row: replace_common_words(row['department']), axis=1)
+    
+    Affiliations_lst = set()
+    Affiliations_dict = {}
+    aff_index = 1
+    df_authors["affiliation1"] = np.nan
+    for index, row in df_authors.iterrows():
+        reformatted_affiliation = format_affiliation(row["department"], row["City"], row["State/Province"], row["Country"])
+        if reformatted_affiliation and reformatted_affiliation not in Affiliations_lst:
+            Affiliations_lst.add(reformatted_affiliation)
+            df_authors.at[index, "affiliation1"] = reformatted_affiliation
+            row["affiliation1"] = reformatted_affiliation
+            if reformatted_affiliation:
+                Affiliations_dict[reformatted_affiliation] = aff_index
+                aff_index = aff_index + 1
+        elif reformatted_affiliation:
+            df_authors.at[index, "affiliation1"] = reformatted_affiliation
+            row["affiliation1"] = reformatted_affiliation
+    
+    df_authors["indexed_affiliation"] = np.nan
+    superscript_mapping = str.maketrans("0123456789,", "⁰¹²³⁴⁵⁶⁷⁸⁹𝄒")
+    for index, row in df_authors.iterrows():
+        indexed_affiliation = ""
+        if pd.notnull(row["affiliation1"]):
+            indexed_affiliation = indexed_affiliation + str(Affiliations_dict[row["affiliation1"]]).translate(superscript_mapping)
+        if indexed_affiliation:
+            df_authors.at[index, "indexed_affiliation"] = indexed_affiliation
+    
+    def format_1(initials, affiliation):
+        return "{}{}".format(initials, affiliation)
+
+    def format_2(first_name, last_name, affiliation):
+        return "{} {}{}".format(first_name, last_name, affiliation)
+
+    def format_3(first_name_initial, middle_initial, last_name, affiliation):
+        if pd.notna(middle_initial):
+            return "{}.{}{}{}".format(first_name_initial, middle_initial, last_name, affiliation)
+        else:
+            return "{}.{}{}".format(first_name_initial, last_name, affiliation)
+
+
+    print(df_authors)
+    if request_data['nameFormatOption'] == 1:
+        df_authors['formatted_names'] = df_authors.apply(lambda row: format_1(row['initials'], row['indexed_affiliation']), axis=1)
+        out = ', '.join(df_authors['formatted_names'])
+    if request_data['nameFormatOption'] == 2:
+        df_authors['formatted_names'] = df_authors.apply(lambda row: format_2(row['First Name'], row["Last Name"], row['indexed_affiliation']), axis=1)
+        out = ', '.join(df_authors['formatted_names'])
+    if request_data['nameFormatOption'] == 3:
+        df_authors['formatted_names'] = df_authors.apply(lambda row: format_3(row['First Name'][0], row['middle_initial'], row['Last Name'], row['indexed_affiliation']), axis=1)
+        out = ', '.join(df_authors['formatted_names'])
+    
+
+    # print(df_authors['index'])
+    response = ""
+    response += 'Authors\n'
+    response += "{}\n".format(out)
+    response += '\nAuthor affiliations\n'
+    for key in Affiliations_dict.keys():
+        response += "{} {}\n".format(Affiliations_dict[key], key)
+    
+    return response
+
+    

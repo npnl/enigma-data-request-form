@@ -12,12 +12,27 @@ export interface FetchDataResponse {
     data: DataFrame;
 }
 
-
-
 export interface DataSummaries {
     data: DataFrame;
     imagingDataBySite: DataFrame;
     columnsSummary: DataFrame;
     recordsBySite: DataFrame;
 }
-  
+
+export interface AuthorsOptions {
+    dataByAuthor: DataFrame;
+    dataBySite: DataFrame;
+}
+
+export interface FormattedAuthorsRequest {
+    groupBy: string;
+    nameFormatOption: number, 
+    sites: string[] | null;
+    authors: number[] | null;
+    firstAuthors: number[] | null;
+    lastAuthors: number[] | null;
+}
+
+export interface FormattedAuthorsResponse {
+    formattedAuthors: string;
+}

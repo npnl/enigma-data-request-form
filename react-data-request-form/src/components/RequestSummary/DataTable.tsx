@@ -3,13 +3,19 @@ import DataTable from "react-data-table-component";
 import { TableStyles } from 'react-data-table-component'; 
 import { Button } from "react-bootstrap";
 import * as Papa from "papaparse";
-import { DataFrame } from "../../types/DataTypes";
+import { DataFrame, Row } from "../../types/DataTypes";
 
 interface DataTableProps {
   dataFrame: DataFrame;
   title?: string;
   showControls?: boolean;
   paginate?: boolean;
+  selectable?: boolean;
+  onSelect?: (selected: {
+    allSelected: boolean;
+    selectedCount: number;
+    selectedRows: Row[];
+}) => void;
 }
 
 const customStyles: TableStyles = {
@@ -38,7 +44,7 @@ const customStyles: TableStyles = {
 };
 
 
-export const CustomDataTable: React.FC<DataTableProps> = ({ dataFrame, title, showControls = false, paginate = false }) => {
+export const CustomDataTable: React.FC<DataTableProps> = ({ dataFrame, title, showControls = false, paginate = false, selectable = false, onSelect }) => {
   const columns = useMemo(() => Object.keys(dataFrame[0] || {}).map(key => ({
     name: key,
     selector: (row: { [x: string]: any; }) => row[key],
@@ -79,12 +85,16 @@ export const CustomDataTable: React.FC<DataTableProps> = ({ dataFrame, title, sh
           pagination
           persistTableHead
           highlightOnHover
+          selectableRows={selectable}
+          onSelectedRowsChange={onSelect}
         /> : <DataTable
         columns={columns}
         data={dataFrame}
         customStyles={customStyles}
         persistTableHead
         highlightOnHover
+        selectableRows={selectable}
+        onSelectedRowsChange={onSelect}
       />}
       </div>
     </div>
