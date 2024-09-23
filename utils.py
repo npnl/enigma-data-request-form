@@ -11,6 +11,8 @@ from botocore.exceptions import ClientError
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from collections import OrderedDict
+import re
 
 
 class RequestStatus(Enum):
@@ -635,4 +637,86 @@ def get_formatted_authors_response(request_data):
     
     return response
 
+
+def get_latest_qc_file():
+    folder_path = f'{working_dir}/faculty/sliew/enigma/new/GBH/BIDS/derivatives/behavior/qc'
+    all_files = os.listdir(folder_path)
+    qc_files = [f for f in all_files if f.startswith('all_behavior_qc_')]
+    dated_files = []
     
+    for file in qc_files:
+        try:
+            parts = file.split('_')
+            year = int(parts[-3]) # Extract year
+            month = int(parts[-2])  # Extract month and convert to int
+            date = int(parts[-1].split('.')[0])  # Extract date and convert to int
+            
+            dated_files.append((file, (year, month, date)))
+        except (IndexError, ValueError) as e:
+            print(f"Skipping file {file}: {e}")
+    
+    if dated_files:
+        latest_file = max(dated_files, key=lambda x: (x[1][0], x[1][1], x[1][2]))[0]
+        return os.path.join(folder_path, latest_file)
+    
+    return None
+
+def get_subject_pdf_data(bids_id, ses_id):
+    file_path = get_latest_qc_file()
+    df = pd.read_csv(file_path)
+    filtered_df = df[(df['BIDS_ID'] == bids_id) & (df['SES'] == ses_id)]
+    filtered_df.fillna('-', inplace=True)
+    return filtered_df
+
+def fetch_qc_data():
+    file_path = get_latest_qc_file()
+    df = pd.read_csv(file_path)
+    filtered_df = df[['BIDS_ID', 'SES', 'SITE']]
+    return filtered_df.to_json(orient='records')
+
+def fetch_qc_pdf_data():
+    pdf_skeleton = {}
+    if not pdf_skeleton:
+        with open(os.path.join(os.getcwd(), 'pdf.json'), 'r') as f:
+            pdf_skeleton = json.load(f)
+    return pdf_skeleton
+
+def replace_placeholders(data, df):
+    if isinstance(data, dict):
+        # Iterate through dictionary and replace placeholders
+        for key, value in data.items():
+            if isinstance(value, str):
+                # Check for placeholders in string values
+                placeholder_match = re.findall(r"<<(.+?)>>", value)
+                if placeholder_match:
+                    # Replace all placeholders in the string
+                    for placeholder_key in placeholder_match:
+                        if placeholder_key in df.columns:
+                            # Replace the placeholder with the value from the DataFrame
+                            value = value.replace(f'<<{placeholder_key}>>', str(df[placeholder_key].values[0]))
+                    data[key] = value
+            else:
+                # Recursively process nested dictionaries and lists
+                data[key] = replace_placeholders(value, df)
+
+    elif isinstance(data, list):
+        # Process each element in the list
+        for idx, item in enumerate(data):
+            data[idx] = replace_placeholders(item, df)
+
+    elif isinstance(data, str):
+        # Handle strings that might contain placeholders
+        placeholder_match = re.findall(r"<<(.+?)>>", data)
+        if placeholder_match:
+            for placeholder_key in placeholder_match:
+                if placeholder_key in df.columns:
+                    data = data.replace(f'<<{placeholder_key}>>', str(df[placeholder_key].values[0]))
+
+    return data
+
+def fetch_pdf_data(bids_id, ses_id):
+    df = get_subject_pdf_data(bids_id, ses_id)
+    qc_pdf_data = fetch_qc_pdf_data()
+    qc_pdf_data = replace_placeholders(qc_pdf_data, df)
+    qc_pdf_data['visit'] = ses_id[-1]
+    return qc_pdf_data

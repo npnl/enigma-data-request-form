@@ -24,7 +24,6 @@ export const fetchMetrics = createAsyncThunk<
 >("metrics/fetchMetrics", async (_, { rejectWithValue }) => {
   try {
     const response = await HttpClient.get<GetMetricResponse>("metrics");
-    // console.log(response);
     return response;
   } catch (error: any) {
     return rejectWithValue(error.message || "An unknown error occurred");
@@ -64,14 +63,14 @@ function applyFiltersAndGetCount(data: DataFrame, cols: string[], session: Timep
     cols.every(col => row[col] !== null && row[col] !== undefined) &&
     row['SES'] !== null && row['BIDS_ID'] !== null
   );
-  
+
   if (session === 'baseline') {
     return filteredData.filter(row => row['SES'] as string === 'ses-1').length;
   } else {
     let sessionFiltered = filteredData.filter(row => ['ses-1', 'ses-2'].includes(row['SES'] as string));
 
-    let bidsGroups = sessionFiltered.reduce((acc: {[key: string]: Set<string>}, row) => {
-      const bidsId = row['BIDS_ID'] as string; 
+    let bidsGroups = sessionFiltered.reduce((acc: { [key: string]: Set<string> }, row) => {
+      const bidsId = row['BIDS_ID'] as string;
       acc[bidsId] = acc[bidsId] || new Set<string>();
       acc[bidsId].add(row['SES'] as string);
       return acc;
@@ -81,7 +80,8 @@ function applyFiltersAndGetCount(data: DataFrame, cols: string[], session: Timep
 
     const bidsIds = filteredData.filter(row => {
       const rowId = row['BIDS_ID'] as number
-      return validBidsIds.includes(rowId.toString())})
+      return validBidsIds.includes(rowId.toString())
+    })
 
     return bidsIds.length;
   }
@@ -100,8 +100,8 @@ export const updateRowCount = createAsyncThunk(
     );
     const imagingRequiredMetrics = Object.values(
       state.metrics.imagingMetrics
-    ).flatMap((category) => category.filter((metric) => metric.is_required)).map((metric) => colMapping[metric.metric_name]);    
-      
+    ).flatMap((category) => category.filter((metric) => metric.is_required)).map((metric) => colMapping[metric.metric_name]);
+
     const response = applyFiltersAndGetCount(state.metrics.booleanData, behavioralRequiredMetrics.concat(imagingRequiredMetrics), timepoint)
     return response
     // try {
@@ -123,14 +123,14 @@ export const updateRowCount = createAsyncThunk(
 );
 
 export const setTimepointAndUpdateRowCount = createAsyncThunk(
-    'metrics/setTimepointAndUpdateRowCount',
-    async ({ timepoint }: { timepoint: Timepoint }, { dispatch }) => {
-        // Assume setTimepoint can be a synchronous action
-        dispatch(setTimepoint({ timepoint }));
-        dispatch(updateRowCount());
-    }
-  );
-  
+  'metrics/setTimepointAndUpdateRowCount',
+  async ({ timepoint }: { timepoint: Timepoint }, { dispatch }) => {
+    // Assume setTimepoint can be a synchronous action
+    dispatch(setTimepoint({ timepoint }));
+    dispatch(updateRowCount());
+  }
+);
+
 
 export const setRequiredAndUpdateRowCount = createAsyncThunk(
   "metrics/setRequiredAndUpdateRowCount",
@@ -148,7 +148,6 @@ export const setRequiredAndUpdateRowCount = createAsyncThunk(
 );
 
 function isMetricsData(data: any): data is Metric {
-//   console.log(Object.values(data));
   return Object.values(data).every(
     (category) =>
       Array.isArray(category) &&
@@ -358,13 +357,13 @@ const metricsSlice = createSlice({
       .addCase(updateRowCount.rejected, (state, action) => {
         state.error = action.payload; // Handle any errors
       })
-      builder
+    builder
       .addCase(fetchBooleanData.fulfilled, (state, action) => {
-        state.booleanData = action.payload; 
+        state.booleanData = action.payload;
         state.rowCount = applyFiltersAndGetCount(action.payload, [])
       })
       .addCase(fetchBooleanData.rejected, (state, action) => {
-        state.error = action.payload; 
+        state.error = action.payload;
       });
   },
 });

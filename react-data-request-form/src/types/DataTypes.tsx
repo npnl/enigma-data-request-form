@@ -1,12 +1,25 @@
 export interface Row {
     [columnName: string]: (number | string | null);
 }
-// export interface DataFrame {
-//     [index: number]: Row;
-//   }
 
 export interface DataFrame extends Array<Row> {
 }
+
+export interface ListItem {
+    [key: string]: (string | null);
+}
+
+export interface List extends Array<ListItem> {
+}
+
+export interface OrderingItem {
+    [key: number]: (string);
+}
+
+export interface OrderingList extends Array<OrderingItem> {
+
+}
+
 
 export interface FetchDataResponse {
     data: DataFrame;
@@ -26,7 +39,7 @@ export interface AuthorsOptions {
 
 export interface FormattedAuthorsRequest {
     groupBy: string;
-    nameFormatOption: number, 
+    nameFormatOption: number,
     sites: string[] | null;
     authors: number[] | null;
     firstAuthors: number[] | null;
@@ -35,4 +48,34 @@ export interface FormattedAuthorsRequest {
 
 export interface FormattedAuthorsResponse {
     formattedAuthors: string;
+}
+
+export interface pdfData {
+    visit: "1" | "2";
+    sections: Array<Section>;
+}
+
+export interface Section {
+    title: string | null;
+    type: 'table' | 'section';
+    description: string | null;
+    subsections: Array<Subsection> | null;
+}
+
+export interface Subsection {
+    title: string | null;
+    type: 'list' | 'table';
+    description: string | null;
+    value: DataFrame | List | null;
+    ordering: OrderingList | null;
+}
+
+export interface QCDataResponse {
+    data: DataFrame
+}
+
+export interface SelectedOptions {
+    allSelected: boolean;
+    selectedCount: number;
+    selectedRows: Row[];
 }

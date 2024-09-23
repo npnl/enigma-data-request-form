@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_from_directory, request, jsonify, session, url_for, Response
 from flask_cors import CORS, cross_origin  # Import CORS
 import json, os
-from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file, get_authors_list, get_formatted_authors_response
+from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file, get_authors_list, get_formatted_authors_response, fetch_pdf_data, fetch_qc_data
 
     
 app_mode = os.getenv('FLASK_APP_MODE', 'user')
@@ -192,6 +192,16 @@ def get_formatted_authors():
         request_data = json.loads(request.data)
         response_txt = get_formatted_authors_response(request_data)
         return jsonify({'formattedAuthors': response_txt}), 200
+
+@application.route('/qc-pdf-data/<bids_id>/<ses_id>', methods=['GET'])
+@cross_origin()
+def get_qc_pdf(bids_id, ses_id):
+    return fetch_pdf_data(bids_id, ses_id)
+
+@application.route('/qc-data', methods=['GET'])
+@cross_origin()
+def get_qc_subjects_data():
+    return fetch_qc_data(), 200
 
 
 def _build_cors_preflight_response():

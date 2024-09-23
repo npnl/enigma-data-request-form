@@ -6,3 +6,4 @@ venv/
 .env
 .env_private.txt
 static/build/
+myenv/
