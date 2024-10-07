@@ -34,6 +34,9 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
+**Install NPM**: 
+ Go to the Node.js download page and download the installer for your operating system (Windows, macOS, or Linux).
+
 **Install Dependencies**: Run the following command in your terminal to install the necessary Python libraries:
 
 ```bash

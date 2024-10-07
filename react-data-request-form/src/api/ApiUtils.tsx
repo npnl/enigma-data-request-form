@@ -1,5 +1,5 @@
 import { DataRequestsResponse, DataRequestIn, DataRequestOut } from "../types/DataRequest";
-import { AuthorsOptions, DataFrame, DataSummaries, FetchDataResponse, FormattedAuthorsRequest, FormattedAuthorsResponse, pdfData, QCDataResponse } from "../types/DataTypes";
+import { AuthorsOptions, DataFrame, DataSummaries, Dictionary, FetchDataResponse, FormattedAuthorsRequest, FormattedAuthorsResponse, pdfData, QCDataResponse } from "../types/DataTypes";
 import HttpClient from "./HttpClient";
 
 
@@ -55,8 +55,13 @@ const fetchQCSubjectsData = async () => {
 }
 
 const fetchPDFData = async (bidsId: string, sesId: string) => {
-    const response = await HttpClient.get<pdfData>(`qc-pdf-data/${bidsId}/${sesId}`);
+    const response = await HttpClient.get<QCDataResponse>(`qc-pdf-data/${bidsId}/${sesId}`);
     return response
+}
+
+const updateQCData = async (bidsId:string, sesId: string, data: Dictionary<string | number>) => {
+    const response = await HttpClient.post<Response>(`qc-pdf-data/${bidsId}/${sesId}`, data);
+    return response;
 }
 
 
@@ -72,5 +77,6 @@ export default {
     fetchAuthorsData,
     fetchFormattedAuthors,
     fetchQCSubjectsData,
-    fetchPDFData
+    fetchPDFData,
+    updateQCData
 };

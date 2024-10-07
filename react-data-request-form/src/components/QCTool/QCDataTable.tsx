@@ -3,12 +3,12 @@ import { CustomDataTable } from '../RequestSummary/DataTable';
 
 import React, { useEffect, useState } from 'react';
 import ApiUtils from '../../api/ApiUtils';
-import { QCDataResponse, SelectedOptions } from '../../types/DataTypes';
+import { DataFrame, SelectedOptions } from '../../types/DataTypes';
 import { Container } from 'react-bootstrap';
-import { DataFrame } from './subcomponents/CustomTable';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { showModal, hideModal } from '../../redux/modalSlice';
+import CustomQCTable from './subcomponents/CustomQCTable';
 
 const QCDataDisplay: React.FC = () => {
     const [data, setData] = useState<DataFrame | null>(null);
@@ -43,7 +43,7 @@ const QCDataDisplay: React.FC = () => {
     return (
         <Container>
             {data && (
-                <CustomDataTable dataFrame={data} onSelect={handleChange} selectable/>
+                <CustomQCTable dataFrame={data} onSelect={handleChange} selectable/>
             )}
         </Container>
     );

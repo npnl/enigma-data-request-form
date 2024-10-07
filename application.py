@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_from_directory, request, jsonify, session, url_for, Response
 from flask_cors import CORS, cross_origin  # Import CORS
 import json, os
-from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file, get_authors_list, get_formatted_authors_response, fetch_pdf_data, fetch_qc_data
+from utils import fetch_data, get_filtered_rows_count, add_data_request, get_request_data_from_storage, get_requests, get_summarized_data, send_email, get_boolean_data_from_file, get_authors_list, get_formatted_authors_response, fetch_pdf_data, fetch_qc_data, update_qc_csv_data
 
     
 app_mode = os.getenv('FLASK_APP_MODE', 'user')
@@ -125,6 +125,7 @@ def fetch_requests():
         return _build_cors_preflight_response()
     if app_mode == 'admin':
         files_data = get_requests()
+        print(files_data)
         return jsonify(files_data), 200
     else:
         return jsonify({'error': 'Invalid operation'}), 401
@@ -203,6 +204,15 @@ def get_qc_pdf(bids_id, ses_id):
 def get_qc_subjects_data():
     return fetch_qc_data(), 200
 
+@application.route('/qc-pdf-data/<bids_id>/<ses_id>', methods=['POST'])
+@cross_origin()
+def update_qc_data(bids_id, ses_id):
+    data = json.loads(request.data)
+    res = update_qc_csv_data(bids_id, ses_id, data)
+    if res:
+        return jsonify({'success': True}), 200
+    return jsonify({'success': False}), 500
+    
 
 def _build_cors_preflight_response():
     response = jsonify({'status': 'success'})

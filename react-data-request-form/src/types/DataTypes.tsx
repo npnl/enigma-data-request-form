@@ -1,8 +1,12 @@
 export interface Row {
-    [columnName: string]: (number | string | null);
+    [columnName: string]: (number | string | null | boolean);
 }
 
 export interface DataFrame extends Array<Row> {
+}
+
+export interface Dictionary<T> {
+    [Key: string]: T;
 }
 
 export interface ListItem {
@@ -55,6 +59,7 @@ export interface pdfData {
     sections: Array<Section>;
 }
 
+
 export interface Section {
     title: string | null;
     type: 'table' | 'section';
@@ -71,7 +76,9 @@ export interface Subsection {
 }
 
 export interface QCDataResponse {
-    data: DataFrame
+    blueprint: pdfData;
+    data: Dictionary<string | number>;
+    errors: Dictionary<string | number>;
 }
 
 export interface SelectedOptions {

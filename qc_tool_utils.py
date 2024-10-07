@@ -782,7 +782,7 @@ gross_movement_subscale = {
 }
 
 sis = {
-    'title': 'Stroke Impact Scale (SIS-16)',
+    'title': '',
     'type': 'table',
     'description': '5 = Not difficult at all\n4 = A little difficult\n3 = Somewhat difficult\n2 = Very difficult\n1 = Could not do at all',
     'ordering': {
@@ -866,7 +866,7 @@ moca = {
 }
 
 nih = {
-    'title': 'NIH Stroke Scale',
+    'title': '',
     'type': 'table',
     'ordering': {
         0: "Instructions",

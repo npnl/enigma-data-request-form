@@ -39,3 +39,23 @@
     margin-bottom: 10px;
     border-radius: 4px;
 }
+
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.input-container input {
+  padding-right: 30px; /* Add space for the warning icon */
+}
+
+.warning-icon {
+  position: absolute;
+  right: 10px; /* Position inside the input */
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ffc107; /* Warning color */
+  cursor: pointer; /* Allow hover */
+  z-index: 1; /* Ensure it's above the input */
+}
+

@@ -1,29 +1,37 @@
 import { CustomDataTable } from '../RequestSummary/DataTable';
 
-
+import { Alert, Button } from "react-bootstrap";
 import React, { useEffect, useState } from 'react';
-import { Table, ListGroup, ListGroupItem, Container, Row, Col } from 'react-bootstrap';
-import { DataFrame, List, OrderingList, pdfData, SelectedOptions } from '../../types/DataTypes';
+import { Container } from 'react-bootstrap';
+import { useDispatch, useSelector } from 'react-redux';
+import { setData, setBidsId, setSesId, setErrors } from '../../redux/qcSlice';
 import ApiUtils from '../../api/ApiUtils';
 import CustomTable from './subcomponents/CustomTable';
 import CustomListGroup from './subcomponents/CustomListGroup';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { hideModal, showModal } from '../../redux/modalSlice';
+import { useParams } from 'react-router-dom';
+import { showModal, hideModal } from '../../redux/modalSlice';
+import { DataFrame, List, OrderingList, QCDataResponse } from '../../types/DataTypes';
+import { RootState } from '../../redux/store';
 
 const QCDataDisplay: React.FC = () => {
-  const [data, setData] = useState<pdfData | null>(null);
+  const [data, setDataState] = useState<QCDataResponse | null>(null);
   const { bidsId, sesId } = useParams();
   const dispatch = useDispatch();
-
+  const qcData = useSelector((state: RootState) => state.qcData); // Access data from Redux
   useEffect(() => {
     // Fetching data from the API
     const fetchData = async () => {
       try {
         if (bidsId && sesId) {
           const response = await ApiUtils.fetchPDFData(bidsId, sesId);
-          setData(response);
+          setDataState(response);
           dispatch(hideModal());
+
+          // Set bidsId, sesId, and data in Redux
+          dispatch(setBidsId(bidsId));
+          dispatch(setSesId(sesId));
+          dispatch(setData(response.data));
+          dispatch(setErrors(response.errors))
         }
       } catch (error) {
         dispatch(showModal({ title: "Error", message: "Failed to submit the request. Please try again.", modalType: 'error' }));
@@ -61,16 +69,37 @@ const QCDataDisplay: React.FC = () => {
     return <></>;
   };
 
+  const handleUpdate = () => {
+    dispatch(showModal({ title: "Processing", message: "Please wait...", modalType: 'loading' }));
+    if (qcData.data)
+      ApiUtils.updateQCData(qcData.bids_id, qcData.ses_id, qcData.data).then((result) => {
+        console.log(result.ok)
+        dispatch(showModal({ title: "Done!", message: "Updated successfully", modalType: 'success' }));
+      }).catch((ex) => {
+        dispatch(showModal({ title: "Error", message: "There was an error processing your request", modalType: 'error' }));
+      })
 
+  }
 
   return (
     <Container>
-      {data && data.visit && 
-      <div className='d-flex justify-content-center my-4'>
-        <h1>{bidsId}; Visit {data.visit}</h1>
+      {data && data.blueprint.visit &&
+        <div className='d-flex justify-content-center my-4'>
+          <h1>{bidsId}; Visit {data.blueprint.visit}</h1>
         </div>}
+      {data && data.errors && (
+        <Alert variant="danger" className="mt-4">
+          <h5>Validation Errors:</h5>
+          <ul>
+            {
+              Object.keys(data.errors).map((val, idx) => 
+                <li key={idx}>{val} - {data.errors[val]}</li> )
+            }
+          </ul>
+        </Alert>
+      )}
       {data && (
-        data.sections.map((section, sectionIndex) => (
+        data.blueprint.sections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="m-8">
             <h2>{section.title}</h2>
             {section.subsections?.map((subsection, subsectionIndex) => (
@@ -91,6 +120,14 @@ const QCDataDisplay: React.FC = () => {
           </div>
         ))
       )}
+      <Button
+        variant="primary"
+        onClick={handleUpdate}
+        disabled={!qcData.dataChanged}
+        className="mt-4 mb-2"
+      >
+        Submit Request
+      </Button>
     </Container>
   );
 };

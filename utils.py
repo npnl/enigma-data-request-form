@@ -13,6 +13,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from collections import OrderedDict
 import re
+from functools import partial
 
 
 class RequestStatus(Enum):
@@ -638,85 +639,374 @@ def get_formatted_authors_response(request_data):
     return response
 
 
-def get_latest_qc_file():
-    folder_path = f'{working_dir}/faculty/sliew/enigma/new/GBH/BIDS/derivatives/behavior/qc'
-    all_files = os.listdir(folder_path)
-    qc_files = [f for f in all_files if f.startswith('all_behavior_qc_')]
-    dated_files = []
+def get_latest_qc_dir(root_directory):
+    # Get all folders in the test directory
+    folders = [f for f in os.listdir(root_directory) if os.path.isdir(os.path.join(root_directory, f))]
     
-    for file in qc_files:
+    # Filter folders with date format yyyy_mm_dd
+    date_folders = []
+    print(os.listdir(root_directory))
+    for folder in folders:
         try:
-            parts = file.split('_')
-            year = int(parts[-3]) # Extract year
-            month = int(parts[-2])  # Extract month and convert to int
-            date = int(parts[-1].split('.')[0])  # Extract date and convert to int
-            
-            dated_files.append((file, (year, month, date)))
-        except (IndexError, ValueError) as e:
-            print(f"Skipping file {file}: {e}")
+            # Check if the folder name can be parsed as a date
+            folder_date = datetime.strptime(folder, '%Y_%m_%d')
+            date_folders.append((folder_date, folder))
+        except ValueError:
+            continue
+    print(date_folders)
+    # Get the latest folder by date
+    if date_folders:
+        latest_folder = max(date_folders)[1]  # Get the folder name with the latest date
+        print(f"Latest folder: {latest_folder}")
+    else:
+        print("No valid date folders found.")
+        return
+
+    # Path to the log file
+    log_file_path = os.path.join(root_directory, latest_folder)
+
+    return log_file_path
+
+# Function to read individual CSV files and aggregate them
+def aggregate_csv_files_from_log(bids_id=None, ses_id=None):
+    # root_directory = f'{working_dir}/faculty/sliew/enigma/new/GBH/BIDS/derivatives/behavior/qc'
+    root_directory = f'/Users/laharireddy/NPNL/PDF_examples'
+    data_directory = get_latest_qc_dir(root_directory)
     
-    if dated_files:
-        latest_file = max(dated_files, key=lambda x: (x[1][0], x[1][1], x[1][2]))[0]
-        return os.path.join(folder_path, latest_file)
+    if data_directory is None:
+        print('No data Directory found')
+        return None  # Exit if no valid directory is found
     
-    return None
+    latest_log_path = os.path.join(data_directory, 'log_all_behavior.csv')
+    
+    # Read the log file into a DataFrame
+    files_df = pd.read_csv(latest_log_path)
+
+    max_timestamp_df = files_df.loc[files_df.groupby(['BIDS_ID', 'SES'])['Timestamp'].idxmax()]
+
+    # Reset the index for better readability
+    max_timestamp_df.reset_index(drop=True, inplace=True)
+
+    if bids_id and ses_id:
+        max_timestamp_df = max_timestamp_df[(max_timestamp_df['BIDS_ID'] == bids_id) & (max_timestamp_df['SES'] == ses_id)]
+    
+    # Initialize an empty DataFrame to store the aggregated data
+    data_df = pd.DataFrame()
+
+    # For each row in files_df, read the corresponding CSV and append to data_df
+    for index, row in max_timestamp_df.iterrows():
+        file_name = row['File_Name']  # Get the File_Name from the current row
+        file_path = os.path.join(data_directory, file_name)  # Construct full path to the CSV file
+        
+        # Check if the file exists before reading
+        if os.path.exists(file_path):
+            temp_df = pd.read_csv(file_path)  # Read the individual CSV file
+            data_df = pd.concat([data_df, temp_df], ignore_index=True)  # Append to data_df
+        else:
+            print(f"File {file_name} not found in {data_directory}.")
+
+    return data_df
 
 def get_subject_pdf_data(bids_id, ses_id):
-    file_path = get_latest_qc_file()
-    df = pd.read_csv(file_path)
-    filtered_df = df[(df['BIDS_ID'] == bids_id) & (df['SES'] == ses_id)]
-    filtered_df.fillna('-', inplace=True)
+    filtered_df = aggregate_csv_files_from_log(bids_id, ses_id)    
     return filtered_df
 
+
+def validate_row_with_validator(row, validator):
+    """
+    Validates a row based on the provided validator DataFrame.
+    Returns a dictionary of errors if any, otherwise an empty dictionary.
+    """
+    errors = {}
+    for _, v_row in validator.iterrows():
+        column = v_row['metric_name']
+        var_type = v_row['variable_type']
+        meas_type = v_row['measurement_type']
+        min_value = v_row['min_value']
+        max_value = v_row['max_value']
+        levels = v_row['levels']
+
+        if column not in row.index:
+            continue
+
+        value = row[column]
+
+        if pd.isnull(value):
+            continue
+
+        # Handle levels for categorical variables
+        if not pd.isnull(levels):
+            dict_vals = [pair.split('=') for pair in levels.split(';')]
+            if var_type == 'int':
+                levels = {int(k): v for k, v in dict_vals}
+            else:
+                levels = {k: v for k, v in dict_vals}
+
+        try:
+            # Type conversion
+            if var_type == 'string':
+                value = str(value)
+            elif var_type == 'int':
+                value = int(float(value))
+            else:
+                continue  # Skip unknown variable types
+        except Exception as e:
+            errors[column] = f'Error processing value: {e}'
+            continue
+
+        # Measurement checks
+        if meas_type in ['discrete', 'continuous']:
+            if (min_value is not None and value < min_value) or \
+               (max_value is not None and value > max_value):
+                errors[column] = f'{value}: out of range ({min_value}-{max_value})'
+        elif meas_type in ['nominal', 'ordinal']:
+            if value not in levels.keys():
+                errors[column] = f'{value}: not in levels {list(levels.keys())}'
+
+    return errors
+
+def check_hemisphere_consistency(row):
+    """
+    Checks consistency between hemispheres and returns errors if any.
+    """
+    errors = {}
+    lesion_hemisphere = row['STROKE_HEMISPHERE']
+    if isinstance(lesion_hemisphere, pd.Series):
+        lesion_hemisphere = lesion_hemisphere.iloc[0]
+
+    paresis = row['PARETIC']
+    if isinstance(paresis, pd.Series):
+        paresis = paresis.iloc[0]
+
+    if pd.isnull(lesion_hemisphere):
+        errors['STROKE_HEMISPHERE'] = 'Missing critical information'
+        return errors
+    
+    if pd.isnull(paresis):
+        errors['PARETIC'] = 'Missing critical information'
+        return errors
+
+    side_map = {1: '_L', 2: '_R', 3: '_Bilateral'}
+    side = None
+    other_side = None
+
+    if (lesion_hemisphere == 1) and (paresis == 2):
+        side = '_R'
+        other_side = '_L'
+    elif (lesion_hemisphere == 2) and (paresis == 1):
+        side = '_L'
+        other_side = '_R'
+    elif lesion_hemisphere == 3:
+        errors['STROKE_HEMISPHERE'] = (
+            f'{lesion_hemisphere}: bilateral stroke marked; check directionality '
+            f'(validation is using paretic side info)'
+        )
+        side = '_L' if paresis == 1 else '_R'
+        other_side = '_R' if paresis == 1 else '_L'
+    elif lesion_hemisphere == paresis:
+        errors['PARETIC'] = (
+            f'{paresis}: paretic side and stroke hemisphere are same; confirm which is correct '
+            f'(validation is using paretic side info)'
+        )
+        side = '_L' if paresis == 1 else '_R'
+        other_side = '_R' if paresis == 1 else '_L' 
+    else:
+        errors['STROKE_HEMISPHERE'] = f'{lesion_hemisphere}: inconsistent or missing data; seek clarification'
+        return errors
+
+    # Define columns to check
+    columns_to_check = [
+        'FMUE_TOTAL', 'FMUE_ARM', 'FMUE_WRIST', 'FMUE_HAND', 'FMUE_REFLEX',
+        'FMUE_HANDREFLEX', 'FMUE_HANDWRIST', 'ARAT_TOTAL', 'ARAT_GRIP',
+        'ARAT_GRASP', 'ARAT_PINCH', 'ARAT_GROSS', 'SAFE'
+    ]
+
+    for col_base in columns_to_check:
+        col = f'{col_base}{side}_SUM'
+        col_other = f'{col_base}{other_side}_SUM'
+        if col in row.index and col_other in row.index:
+            val_col = row[col]
+            val_col_other = row[col_other]
+
+            # Convert values to numeric, coercing errors to NaN
+            val_col_numeric = pd.to_numeric(val_col, errors='coerce')
+            val_col_other_numeric = pd.to_numeric(val_col_other, errors='coerce')
+
+            # Check if both values are numeric
+            if pd.notnull(val_col_numeric) and pd.notnull(val_col_other_numeric):
+                if val_col_numeric > val_col_other_numeric:
+                    errors[col] = f'{val_col}: possible L/R switch (compare to {val_col_other})'
+                if val_col_numeric == 0 and val_col_other_numeric == 0:
+                    errors[col] = f'{val_col}: both hemispheres have values of 0: possible missing values'
+            else:
+                # Handle cases where values are non-numeric or missing
+                if pd.isnull(val_col_numeric):
+                    errors[col] = f'Value "{val_col}" is not numeric or missing.'
+                if pd.isnull(val_col_other_numeric):
+                    errors[col_other] = f'Value "{val_col_other}" is not numeric or missing.'
+        else:
+            continue
+
+    return errors
+
+
+def check_arat_rules(row):
+    """
+    Checks ARAT rules and returns errors if any.
+    """
+    errors = {}
+    for side in ['_L', '_R']:
+        first_item = 'ARAT_CMBLOCK10' + side
+        if first_item in row.index and pd.notnull(row[first_item]):
+            if int(row[first_item]) == 3:
+                subsequent_items = [
+                    'CMBLOCK25', 'CMBLOCK5', 'CMBLOCK75', 'CRICKETBALL', 'SHARPENINGSTONE'
+                ]
+                for val in subsequent_items:
+                    col = 'ARAT_' + val + side
+                    if col in row.index and pd.notnull(row[col]):
+                        if int(row[col]) != 3:
+                            errors[col] = f'{row[col]}: should be 3 since first item is 3'
+
+        # Add other ARAT rule checks as needed
+
+    return errors 
+
+def validate_subject_row(row, validator):
+    """
+    Validates a subject row and returns a dictionary of errors.
+    """
+    totalErrors = {}
+    print(row)
+    print('validate_qc_required', validate_qc_required(row, validator))
+    # Validation 1: Range and level checks
+    errors1 = validate_row_with_validator(row, validator)
+
+    # Validation 2: Hemisphere consistency
+    errors2 = check_hemisphere_consistency(row)
+
+    # Validation 3: ARAT rules
+    errors3 = check_arat_rules(row)
+
+    totalErrors.update(errors1)
+    totalErrors.update(errors2)
+    totalErrors.update(errors3)
+    return totalErrors
+
+def validate_qc_required(row, validator):
+    """
+    Simplified validation function that returns True if any validation fails.
+    """
+    # Use the same validation functions but return early if any errors are found
+    if validate_row_with_validator(row, validator):
+        return True
+    if check_hemisphere_consistency(row):
+        return True
+    if check_arat_rules(row):
+        return True
+    return False
+
 def fetch_qc_data():
-    file_path = get_latest_qc_file()
-    df = pd.read_csv(file_path)
-    filtered_df = df[['BIDS_ID', 'SES', 'SITE']]
+    # Read the validator once outside the validation function
+    validator = pd.read_csv(f'{working_dir}/faculty/sliew/enigma/new/Mahir/GBH_scripts/behavior/gbh_values_validation.csv')
+
+    filtered_df = aggregate_csv_files_from_log()
+
+    # Use partial to fix the validator argument
+    validate_func = partial(validate_qc_required, validator=validator)
+
+    # Apply the validation function
+    filtered_df['QC_REQUIRED'] = filtered_df.apply(validate_func, axis=1)
+    filtered_df = filtered_df[['BIDS_ID', 'SES', 'SITE', 'QC_REQUIRED']]
     return filtered_df.to_json(orient='records')
 
 def fetch_qc_pdf_data():
-    pdf_skeleton = {}
-    if not pdf_skeleton:
-        with open(os.path.join(os.getcwd(), 'pdf.json'), 'r') as f:
-            pdf_skeleton = json.load(f)
+    # Load pdf_skeleton once
+    with open(os.path.join(os.getcwd(), 'pdf.json'), 'r') as f:
+        pdf_skeleton = json.load(f)
     return pdf_skeleton
 
 def replace_placeholders(data, df):
+    """
+    Recursively replaces placeholders in the data structure with values from the DataFrame.
+    """
     if isinstance(data, dict):
         # Iterate through dictionary and replace placeholders
         for key, value in data.items():
-            if isinstance(value, str):
-                # Check for placeholders in string values
-                placeholder_match = re.findall(r"<<(.+?)>>", value)
-                if placeholder_match:
-                    # Replace all placeholders in the string
-                    for placeholder_key in placeholder_match:
-                        if placeholder_key in df.columns:
-                            # Replace the placeholder with the value from the DataFrame
-                            value = value.replace(f'<<{placeholder_key}>>', str(df[placeholder_key].values[0]))
-                    data[key] = value
-            else:
-                # Recursively process nested dictionaries and lists
-                data[key] = replace_placeholders(value, df)
+            data[key] = replace_placeholders(value, df)
 
     elif isinstance(data, list):
         # Process each element in the list
-        for idx, item in enumerate(data):
-            data[idx] = replace_placeholders(item, df)
+        data = [replace_placeholders(item, df) for item in data]
 
     elif isinstance(data, str):
         # Handle strings that might contain placeholders
-        placeholder_match = re.findall(r"<<(.+?)>>", data)
-        if placeholder_match:
-            for placeholder_key in placeholder_match:
-                if placeholder_key in df.columns:
-                    data = data.replace(f'<<{placeholder_key}>>', str(df[placeholder_key].values[0]))
+        placeholders = re.findall(r"<<(.+?)>>", data)
+        for placeholder in placeholders:
+            if placeholder in df.columns:
+                data = data.replace(f'<<{placeholder}>>', str(df[placeholder].values[0]))
 
     return data
 
 def fetch_pdf_data(bids_id, ses_id):
     df = get_subject_pdf_data(bids_id, ses_id)
+    validator = pd.read_csv(f'{working_dir}/faculty/sliew/enigma/new/Mahir/GBH_scripts/behavior/gbh_values_validation.csv')
+    if df.empty:
+        # Handle the case where no data is found
+        return {'error': 'No data found for the given BIDS_ID and SES_ID.'}
+
+    # Ensure df has only one row
+    if len(df) > 1:
+        # Handle the case where multiple entries are found
+        # For now, we'll just take the first one
+        df = df.iloc[[0]]
+
+    row = df.iloc[0]
+    errors = validate_subject_row(row, validator)
+
     qc_pdf_data = fetch_qc_pdf_data()
-    qc_pdf_data = replace_placeholders(qc_pdf_data, df)
+    # qc_pdf_data = replace_placeholders(qc_pdf_data, df)
     qc_pdf_data['visit'] = ses_id[-1]
-    return qc_pdf_data
+    df.fillna('', inplace=True)
+    res = {
+        'blueprint': qc_pdf_data,
+        'data': df.to_dict(orient='records')[0],
+        'errors': errors
+    }
+    return res
+
+def update_qc_csv_data(bids_id, ses_id, data):
+    try:
+        timestamp = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        root_directory = f'{working_dir}/faculty/sliew/enigma/new/GBH/BIDS/derivatives/behavior/qc'
+        # root_directory = f'/Users/laharireddy/NPNL/PDF_examples'
+        qc_dir = get_latest_qc_dir(root_directory)
+        print(data)
+        skeleton_path = os.path.join(qc_dir, 'blueprint.csv')
+        df = pd.read_csv(skeleton_path, index_col=False)
+        for column, value in data.items():
+            print(column)
+            if column in df.columns: 
+                df[column] = [value] 
+        
+        df.fillna('', inplace=True)
+        file_name = f'{bids_id}_{ses_id}_{timestamp}'
+        
+        log_file_path = os.path.join(qc_dir, 'log_all_behavior.csv')
+        log_df = pd.read_csv(log_file_path, index_col=False)
+        new_row = {
+            'BIDS_ID': bids_id,     
+            'SES': ses_id,
+            'Timestamp': timestamp,
+            'File_Name': file_name + '.csv'
+        }
+        new_row_df = pd.DataFrame([new_row])
+        log_df = pd.concat([log_df, new_row_df], ignore_index=True)
+        print(df)
+        df.to_csv(os.path.join(qc_dir, file_name + '.csv'), index=False)
+        log_df.to_csv(log_file_path, index=False)
+
+        return True
+    except Exception as e:
+        print(e)
+        return False
