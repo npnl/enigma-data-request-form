@@ -1,8 +1,8 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import DataForm from './DataForm'; // Assume this is your form component
-import RequestsTable from './RequestsTable';
-import env from '../config'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import DataForm from "./DataForm"; // Assume this is your form component
+import RequestsTable from "./RequestsTable";
+import env from "../config";
 
 const NavBar = () => {
   return (
@@ -29,7 +29,7 @@ const NavBar = () => {
                 Data Request Form
               </Link>
             </li>
-            {env.USER_MODE && env.USER_MODE === 'admin' && (
+            {env.USER_MODE && env.USER_MODE === "admin" && (
               <>
                 <li className="nav-item">
                   <Link className="nav-link" to="/view-requests">
@@ -51,7 +51,6 @@ const NavBar = () => {
           </ul>
         </div>
       </nav>
-
     </div>
   );
 };

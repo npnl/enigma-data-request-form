@@ -1,13 +1,16 @@
 import React, { useMemo } from "react";
 import DataTable from "react-data-table-component";
-import { TableStyles } from 'react-data-table-component'; 
+import { TableStyles } from "react-data-table-component";
 import { Button } from "react-bootstrap";
 import * as Papa from "papaparse";
 import { DataFrame, Row } from "../../../types/DataTypes";
 
 // Import FontAwesome icons
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCheckCircle,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface DataTableProps {
   dataFrame: DataFrame;
@@ -25,24 +28,24 @@ interface DataTableProps {
 const customStyles: TableStyles = {
   rows: {
     style: {
-      minHeight: '45px',
-    }
+      minHeight: "45px",
+    },
   },
   headCells: {
     style: {
-      paddingLeft: '8px',
-      paddingRight: '8px',
-      fontSize: '16px',
-      whiteSpace: 'normal !important' as 'normal',
-      overflow: 'visible !important' as 'visible',
-      textOverflow: 'clip !important' as 'clip'
+      paddingLeft: "8px",
+      paddingRight: "8px",
+      fontSize: "16px",
+      whiteSpace: "normal !important" as "normal",
+      overflow: "visible !important" as "visible",
+      textOverflow: "clip !important" as "clip",
     },
   },
   cells: {
     style: {
-      paddingLeft: '8px',
-      paddingRight: '8px',
-      fontSize: '14px',
+      paddingLeft: "8px",
+      paddingRight: "8px",
+      fontSize: "14px",
     },
   },
 };
@@ -53,30 +56,39 @@ export const CustomQCTable: React.FC<DataTableProps> = ({
   showControls = false,
   paginate = false,
   selectable = false,
-  onSelect
+  onSelect,
 }) => {
-
   const columns = useMemo(() => {
-    return Object.keys(dataFrame[0] || {}).map(key => {
-      if (key === 'QC_REQUIRED') {
+    return Object.keys(dataFrame[0] || {}).map((key) => {
+      if (key === "QC_REQUIRED") {
         return {
           name: key,
-          selector: (row: { [x: string]: any; }) => row[key],
+          selector: (row: { [x: string]: any }) => row[key],
           sortable: true,
-          cell: (row: { [x: string]: any; }) => {
+          cell: (row: { [x: string]: any }) => {
             const qcRequired = row[key];
-            const isQCRequired = qcRequired === true || qcRequired === 'True' || qcRequired === 'true' || qcRequired === 1;
+            const isQCRequired =
+              qcRequired === true ||
+              qcRequired === "True" ||
+              qcRequired === "true" ||
+              qcRequired === 1;
             return isQCRequired ? (
-              <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: 'orange', fontSize: '1.5em' }} />
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                style={{ color: "orange", fontSize: "1.5em" }}
+              />
             ) : (
-              <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green', fontSize: '1.5em' }} />
+              <FontAwesomeIcon
+                icon={faCheckCircle}
+                style={{ color: "green", fontSize: "1.5em" }}
+              />
             );
           },
         };
       } else {
         return {
           name: key,
-          selector: (row: { [x: string]: any; }) => row[key],
+          selector: (row: { [x: string]: any }) => row[key],
           sortable: true,
         };
       }
@@ -114,7 +126,6 @@ export const CustomQCTable: React.FC<DataTableProps> = ({
           onSelectedRowsChange={onSelect}
         />
       </div>
-
     </div>
   );
 };

@@ -23,7 +23,7 @@ const DataView: React.FC = ({}) => {
   useEffect(() => {
     (async () => {
       try {
-        console.log(fileName, fileNameParam)
+        console.log(fileName, fileNameParam);
         if (fileNameParam && fileName != fileNameParam) {
           dispatch(setFilename(fileNameParam));
           dispatch(fetchFormSummary(fileNameParam));
@@ -48,12 +48,17 @@ const DataView: React.FC = ({}) => {
     );
   }
 
-  console.log(dataSummary)
+  console.log(dataSummary);
   return (
     <>
       {dataSummary?.data && (
         <div className="mx-3 my-3">
-          <DataTable dataFrame={dataSummary?.data} title="Data" showControls paginate/>
+          <DataTable
+            dataFrame={dataSummary?.data}
+            title="Data"
+            showControls
+            paginate
+          />
         </div>
       )}
     </>

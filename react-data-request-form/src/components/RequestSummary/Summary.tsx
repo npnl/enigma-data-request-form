@@ -45,14 +45,14 @@ const Summary: React.FC = ({}) => {
     <>
       {fileName && dataSummary?.data && (
         <div className="d-flex justify-content-end mt-3">
-        <Button
-          variant="primary"
-          color="primary"
-          onClick={() => viewData(fileName)}
-          disabled={dataSummary.data ? false: true}
-        >
-          View Data
-        </Button>
+          <Button
+            variant="primary"
+            color="primary"
+            onClick={() => viewData(fileName)}
+            disabled={dataSummary.data ? false : true}
+          >
+            View Data
+          </Button>
         </div>
       )}
       <FormSummary data={formSummary} isLoading={isFormSummaryLoading} />

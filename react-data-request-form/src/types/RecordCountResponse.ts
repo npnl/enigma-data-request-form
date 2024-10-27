@@ -1,3 +1,3 @@
 export interface RecordCountResponse {
-    count: number;
+  count: number;
 }

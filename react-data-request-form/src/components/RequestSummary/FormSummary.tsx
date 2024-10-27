@@ -157,7 +157,7 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
 
   return (
     <Container>
-    <h2 className="mt-3 mb-3">Form Summary</h2>
+      <h2 className="mt-3 mb-3">Form Summary</h2>
       <Row className="mb-2">
         <Col>
           <h4>Behavioral Metrics</h4>

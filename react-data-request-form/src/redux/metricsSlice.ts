@@ -30,80 +30,96 @@ export const fetchMetrics = createAsyncThunk<
   }
 });
 
-export const fetchBooleanData = createAsyncThunk<DataFrame, void, { rejectValue: string }>(
-  'metrics/booleanData',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await ApiUtils.fetchBooleanData(); // Assuming this returns a DataFrame
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "An unknown error occurred");
-    }
+export const fetchBooleanData = createAsyncThunk<
+  DataFrame,
+  void,
+  { rejectValue: string }
+>("metrics/booleanData", async (_, { rejectWithValue }) => {
+  try {
+    const response = await ApiUtils.fetchBooleanData(); // Assuming this returns a DataFrame
+    return response;
+  } catch (error: any) {
+    return rejectWithValue(error.message || "An unknown error occurred");
   }
-);
+});
 
 interface ColumnMapping {
   [key: string]: string;
 }
 
-
 const colMapping: ColumnMapping = {
-  'T1': 'T1_in_BIDS',
-  'T2': 'T2_in_BIDS',
-  'DWI': 'DWI_in_BIDS',
-  'FLAIR': 'FLAIR_in_BIDS',
-  'Native_Lesion': 'Raw_Lesion_in_BIDS',
-  'MNI_T1': 'MNI_T1_in_BIDS',
-  'MNI_Lesion_Mask': 'MNI_Lesion_mask_in_BIDS'
+  T1: "T1_in_BIDS",
+  T2: "T2_in_BIDS",
+  DWI: "DWI_in_BIDS",
+  FLAIR: "FLAIR_in_BIDS",
+  Native_Lesion: "Raw_Lesion_in_BIDS",
+  MNI_T1: "MNI_T1_in_BIDS",
+  MNI_Lesion_Mask: "MNI_Lesion_mask_in_BIDS",
 };
 
-
-function applyFiltersAndGetCount(data: DataFrame, cols: string[], session: Timepoint = 'baseline'): number {
-  let filteredData = data.filter(row =>
-    cols.every(col => row[col] !== null && row[col] !== undefined) &&
-    row['SES'] !== null && row['BIDS_ID'] !== null
+function applyFiltersAndGetCount(
+  data: DataFrame,
+  cols: string[],
+  session: Timepoint = "baseline"
+): number {
+  let filteredData = data.filter(
+    (row) =>
+      cols.every((col) => row[col] !== null && row[col] !== undefined) &&
+      row["SES"] !== null &&
+      row["BIDS_ID"] !== null
   );
 
-  if (session === 'baseline') {
-    return filteredData.filter(row => row['SES'] as string === 'ses-1').length;
+  if (session === "baseline") {
+    return filteredData.filter((row) => (row["SES"] as string) === "ses-1")
+      .length;
   } else {
-    let sessionFiltered = filteredData.filter(row => ['ses-1', 'ses-2'].includes(row['SES'] as string));
+    let sessionFiltered = filteredData.filter((row) =>
+      ["ses-1", "ses-2"].includes(row["SES"] as string)
+    );
 
-    let bidsGroups = sessionFiltered.reduce((acc: { [key: string]: Set<string> }, row) => {
-      const bidsId = row['BIDS_ID'] as string;
-      acc[bidsId] = acc[bidsId] || new Set<string>();
-      acc[bidsId].add(row['SES'] as string);
-      return acc;
-    }, {});
+    let bidsGroups = sessionFiltered.reduce(
+      (acc: { [key: string]: Set<string> }, row) => {
+        const bidsId = row["BIDS_ID"] as string;
+        acc[bidsId] = acc[bidsId] || new Set<string>();
+        acc[bidsId].add(row["SES"] as string);
+        return acc;
+      },
+      {}
+    );
 
-    let validBidsIds = Object.keys(bidsGroups).filter(id => bidsGroups[id].size === 2);
+    let validBidsIds = Object.keys(bidsGroups).filter(
+      (id) => bidsGroups[id].size === 2
+    );
 
-    const bidsIds = filteredData.filter(row => {
-      const rowId = row['BIDS_ID'] as number
-      return validBidsIds.includes(rowId.toString())
-    })
+    const bidsIds = filteredData.filter((row) => {
+      const rowId = row["BIDS_ID"] as number;
+      return validBidsIds.includes(rowId.toString());
+    });
 
     return bidsIds.length;
   }
 }
 
-
 export const updateRowCount = createAsyncThunk(
   "metrics/updateRowCount",
   async (_, { dispatch, getState, rejectWithValue }) => {
     const state = getState() as RootState;
-    const timepoint = state.metrics.timepoint
+    const timepoint = state.metrics.timepoint;
     const behavioralRequiredMetrics = Object.values(
       state.metrics.behavioralMetrics
-    ).flatMap((category) => category.filter((metric) => metric.is_required)).map(
-      (metric) => metric.metric_name
-    );
-    const imagingRequiredMetrics = Object.values(
-      state.metrics.imagingMetrics
-    ).flatMap((category) => category.filter((metric) => metric.is_required)).map((metric) => colMapping[metric.metric_name]);
+    )
+      .flatMap((category) => category.filter((metric) => metric.is_required))
+      .map((metric) => metric.metric_name);
+    const imagingRequiredMetrics = Object.values(state.metrics.imagingMetrics)
+      .flatMap((category) => category.filter((metric) => metric.is_required))
+      .map((metric) => colMapping[metric.metric_name]);
 
-    const response = applyFiltersAndGetCount(state.metrics.booleanData, behavioralRequiredMetrics.concat(imagingRequiredMetrics), timepoint)
-    return response
+    const response = applyFiltersAndGetCount(
+      state.metrics.booleanData,
+      behavioralRequiredMetrics.concat(imagingRequiredMetrics),
+      timepoint
+    );
+    return response;
     // try {
     //   const response = await HttpClient.post<RecordCountResponse>(
     //     "rows-count",
@@ -123,14 +139,13 @@ export const updateRowCount = createAsyncThunk(
 );
 
 export const setTimepointAndUpdateRowCount = createAsyncThunk(
-  'metrics/setTimepointAndUpdateRowCount',
+  "metrics/setTimepointAndUpdateRowCount",
   async ({ timepoint }: { timepoint: Timepoint }, { dispatch }) => {
     // Assume setTimepoint can be a synchronous action
     dispatch(setTimepoint({ timepoint }));
     dispatch(updateRowCount());
   }
 );
-
 
 export const setRequiredAndUpdateRowCount = createAsyncThunk(
   "metrics/setRequiredAndUpdateRowCount",
@@ -356,11 +371,11 @@ const metricsSlice = createSlice({
       })
       .addCase(updateRowCount.rejected, (state, action) => {
         state.error = action.payload; // Handle any errors
-      })
+      });
     builder
       .addCase(fetchBooleanData.fulfilled, (state, action) => {
         state.booleanData = action.payload;
-        state.rowCount = applyFiltersAndGetCount(action.payload, [])
+        state.rowCount = applyFiltersAndGetCount(action.payload, []);
       })
       .addCase(fetchBooleanData.rejected, (state, action) => {
         state.error = action.payload;

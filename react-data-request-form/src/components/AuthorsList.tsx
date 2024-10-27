@@ -10,7 +10,7 @@ import DataTable from "./RequestSummary/DataTable";
 import ApiUtils from "../api/ApiUtils";
 import { Button, InputGroup, FormControl } from "react-bootstrap";
 import { styled } from "styled-components";
-import TextareaAutosize from '@mui/material/TextareaAutosize';
+import TextareaAutosize from "@mui/material/TextareaAutosize";
 
 interface SelectedOptions {
   allSelected: boolean;
@@ -82,7 +82,7 @@ const AuthorsList = () => {
 
       if (firstAuthors.length > 0) request.firstAuthors = firstAuthors;
       if (lastAuthors.length > 0) request.lastAuthors = lastAuthors;
-      console.log(request)
+      console.log(request);
       const response = await ApiUtils.fetchFormattedAuthors(request);
       console.log(response);
       if (response && response.formattedAuthors) {
@@ -206,7 +206,7 @@ const AuthorsList = () => {
         <StyledTextarea
           minRows={3}
           placeholder="Formatted Authors"
-          value={formattedResponse ?? ''}
+          value={formattedResponse ?? ""}
         />
       </div>
     </>
