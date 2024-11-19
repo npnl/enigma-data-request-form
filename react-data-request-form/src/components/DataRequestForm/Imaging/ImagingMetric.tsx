@@ -1,12 +1,12 @@
 import React from "react";
-import { RootState } from "../../redux/store";
+import { RootState } from "../../../redux/store";
 import { useSelector } from "react-redux";
 import {
   setSelected,
   setRequiredAndUpdateRowCount,
-} from "../../redux/metricsSlice";
-import { Metric } from "../../types/MetricsData";
-import { useAppDispatch } from "../../hooks";
+} from "../../../redux/metricsSlice";
+import { Metric } from "../../../types/MetricsData";
+import { useAppDispatch } from "../../../hooks";
 
 interface ImagingMetricProps {
   category: string;

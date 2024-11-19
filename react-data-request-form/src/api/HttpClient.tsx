@@ -14,14 +14,22 @@ export default class HttpClient {
   }
 
   // Method to perform a GET request
-  public static async get<T>(endpoint: string): Promise<T> {
+  public static async get<T>(
+    endpoint: string,
+    authToken: string | null = null
+  ): Promise<T> {
     try {
+      let headers: { [key: string]: string } = {
+        "Content-Type": "application/json",
+      };
+      
+      if (authToken) {
+        headers["Authorization"] = `Bearer ${authToken}`;
+      }
+      
       const response = await fetch(`${this.baseUrl}/${endpoint}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // Add any other headers like Authorization if needed
-        },
+        headers: headers,
       });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
@@ -36,14 +44,19 @@ export default class HttpClient {
   }
 
   // Method to perform a POST request
-  public static async post<T>(endpoint: string, data: any): Promise<T> {
+  public static async post<T>(endpoint: string, data: any, authToken: string | null = null): Promise<T> {
     try {
+      let headers: { [key: string]: string } = {
+        "Content-Type": "application/json",
+      };
+      
+      if (authToken) {
+        headers["Authorization"] = `Bearer ${authToken}`;
+      }
+      
       const response = await fetch(`${this.baseUrl}/${endpoint}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Add any other headers like Authorization if needed
-        },
+        headers: headers,
         body: JSON.stringify(data),
       });
       if (!response.ok) {
@@ -55,4 +68,29 @@ export default class HttpClient {
       throw error;
     }
   }
+
+public static async delete<T>(endpoint: string, data: any, authToken: string | null = null): Promise<T> {
+  try {
+    let headers: { [key: string]: string } = {
+      "Content-Type": "application/json",
+    };
+    
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+    
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: "DELETE",
+      headers: headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    // You could add more error handling logic here
+    throw error;
+  }
+}
 }

@@ -26,19 +26,13 @@ from utils import (
     update_qc_csv_data,
 )
 
+import collaborators_utils 
+
 
 app_mode = os.getenv("FLASK_APP_MODE", "user")
 application = Flask(__name__, static_folder="static/build")
+# CORS(application, resources={r"/*": {"origins": "http://localhost:3000"}})
 CORS(application)
-
-
-@application.route("/", defaults={"path": ""})
-@application.route("/<path:path>")
-@cross_origin()
-def form(path):
-    if path:
-        return send_from_directory(application.static_folder, path)
-    return send_from_directory(application.static_folder, "index.html")
 
 
 @application.route("/config", methods=["GET"])
@@ -134,7 +128,7 @@ def get_metrics():
     if request.method == "OPTIONS":
         return _build_cors_preflight_response()
     try:
-        with open(application.static_folder + "/data/metrics_data.json", "r") as file:
+        with open(application.static_folder + "/anonymized_data/metrics_data.json", "r") as file:
             behavioral_data = json.loads(file.read())
             data = {
                 "behavioral": behavioral_data,
@@ -282,6 +276,79 @@ def update_qc_data(bids_id, ses_id):
         return jsonify({"success": True}), 200
     return jsonify({"success": False}), 500
 
+@application.route("/collaborators/get_user_details", methods=["GET", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def get_user_details():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.get_user_details(request)
+
+
+@application.route("/collaborators/update_user_details", methods=["POST", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def update_user_details():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.update_user_details(request)
+
+@application.route("/collaborators/delete_collaborator", methods=["DELETE", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def delete_collaborator():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.delete_collaborator(request)
+
+@application.route("/collaborators/add_collaborator", methods=["POST", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def add_collaborator():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.add_collaborator(request)
+
+@application.route("/collaborators/get_all_collaborators", methods=["GET", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def get_all_collaborators():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.get_all_collaborators(request)
+
+@application.route("/collaborators/get_admins", methods=["GET", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def get_admins():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.get_admins(request)
+
+@application.route("/collaborators/add_admin", methods=["POST", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def add_admin():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.add_admin(request)
+
+@application.route("/collaborators/delete_admin", methods=["DELETE","OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def delete_admin():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.delete_admin(request)
+
+@application.route("/collaborators/check_admin_status", methods=["GET", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def check_admin_status():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.check_admin_status(request)
+
 
 def _build_cors_preflight_response():
     response = jsonify({"status": "success"})
@@ -293,6 +360,14 @@ def _build_cors_preflight_response():
     )
     return response
 
+@application.route("/", defaults={"path": ""})
+@application.route("/<path:path>")
+@cross_origin()
+def form(path):
+    if path != "" and os.path.exists(os.path.join(application.static_folder, path)):
+        return send_from_directory(application.static_folder, path)
+    else:
+        return send_from_directory(application.static_folder, 'index.html')
 
 if __name__ == "__main__":
     application.run(debug=True)

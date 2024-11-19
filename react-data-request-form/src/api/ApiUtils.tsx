@@ -95,6 +95,83 @@ const updateQCData = async (
   return response;
 };
 
+const checkCollabAdminStatus = async (token: string | null) => {
+  const response = await HttpClient.get<any>(
+    `collaborators/check_admin_status`,
+    token
+  )
+  return response
+}
+
+const fetchCollabAdmin = async (token: string | null) => {
+  const response = await HttpClient.get<any>(
+    `collaborators/get_admins`,
+    token
+  )
+  return response
+}
+
+const deleteCollabAdmin = async (token: string | null, email: string) => {
+  const response = await HttpClient.delete<any>(
+    `collaborators/delete_admin`,
+    {'email': email}, 
+    token
+  )
+  return response
+}
+
+const addCollabAdmin = async (token: string | null, email: string) => {
+  const response = await HttpClient.post<any>(
+    `collaborators/add_admin`,
+    {'email': email}, 
+    token
+  )
+  return response
+}
+
+const addCollaborator = async (token: string | null, data: any) => {
+  const response = await HttpClient.post<any>(
+    `collaborators/add_collaborator`,
+    data,
+    token
+  )
+  return response
+}
+
+const updateCollabUserDetails = async (token: string | null, data: any) => {
+  const response = await HttpClient.post<any>(
+    `collaborators/update_user_details`,
+    data,
+    token
+  )
+  return response
+}
+
+const deleteCollaborator = async (token: string | null, id: [string]) => {
+  const response = await HttpClient.post<any>(
+    `collaborators/delete_collaborator`,
+    id, 
+    token
+  )
+  return response
+}
+
+const fetchCollaborators = async (token: string | null) => {
+  const response = await HttpClient.get<any>(
+    `collaborators/get_all_collaborators`,
+    token
+  )
+  return response
+}
+
+const fetchCollabUserDetails = async (token: string | null) => {
+  const response = await HttpClient.get<any>(
+    `collaborators/get_user_details`,
+    token
+  )
+  return response
+}
+
 export default {
   fetchRequests,
   // getData,
@@ -108,4 +185,13 @@ export default {
   fetchQCSubjectsData,
   fetchPDFData,
   updateQCData,
+  checkCollabAdminStatus,
+  fetchCollabAdmin,
+  deleteCollabAdmin,
+  addCollabAdmin,
+  addCollaborator,
+  updateCollabUserDetails,
+  deleteCollaborator,
+  fetchCollaborators,
+  fetchCollabUserDetails
 };

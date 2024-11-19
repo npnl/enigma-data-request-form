@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
-import { RootState } from '../../redux/store';
+import { RootState } from '../../../redux/store';
 import { useSelector } from 'react-redux';
-import { setSelected, setRequiredAndUpdateRowCount, setFilterValue1, setFilterValue2 } from '../../redux/metricsSlice';
-import { Metric } from '../../types/MetricsData';
-import { useAppDispatch } from '../../hooks';
-import { hideModal, showModal } from '../../redux/modalSlice';
-import { approximateRecordCountMessage } from '../../constants';
+import { setSelected, setRequiredAndUpdateRowCount, setFilterValue1, setFilterValue2 } from '../../../redux/metricsSlice';
+import { Metric } from '../../../types/MetricsData';
+import { useAppDispatch } from '../../../hooks';
+import { hideModal, showModal } from '../../../redux/modalSlice';
+import { approximateRecordCountMessage } from '../../../constants';
 
 type MetricType = 'float' | 'int' | 'string' | 'image';
 

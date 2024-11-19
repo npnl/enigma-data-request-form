@@ -63,7 +63,7 @@ class BooleanData:
     @classmethod
     def _get_data(cls, path):
         if cls._data is None:
-            cls._data = pd.read_csv(path + "/data/all_data_boolean_subj_with_ses.csv")
+            cls._data = pd.read_csv(path + "/anonymized_data/anonymized_data.csv")
         return cls._data
 
     @classmethod
@@ -102,7 +102,7 @@ def get_data(behavior_filters):
     cols_of_interest = list(cols_of_interest)
     req_not_null = [key for key, value in behavior_filters.items() if value["required"]]
     files = glob.glob(
-        f"{working_dir}/faculty/sliew/enigma/new/octavio/behavior_renamed_20240126/*behavior_renamed.csv"
+        f"{working_dir}/faculty/sliew/enigma/new/BIDS/derivatives/master_db/master_ENIGMA_db_2024_10_11.csv"
     )
     all_df = pd.DataFrame([])
     for file in sorted(files):

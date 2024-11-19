@@ -1,5 +1,5 @@
-import BehavioralMetricContainer from "./Behavioral/BehavioralSection";
-import ImagingMetricContainer from "./Imaging/ImagingSection";
+import BehavioralMetricContainer from "./DataRequestForm/Behavioral/BehavioralSection";
+import ImagingMetricContainer from "./DataRequestForm/Imaging/ImagingSection";
 import RecordCount from "./RecordsCount";
 import TimepointSelection from "./TimepointSelection";
 import env from "../config";

@@ -741,53 +741,6 @@
             "description": "Volume of the lesion in cc"
         }
     ],
-    "Modality": [
-        {
-            "metric_name": "DIFFUSION",
-            "variable_type": "int",
-            "description": "Diffusion imaging present or not."
-        },
-        {
-            "metric_name": "DTI",
-            "variable_type": "int",
-            "description": "Diffusion Tensor Imaging (whether available/ unavailable)"
-        },
-        {
-            "metric_name": "DTI_DIRECTIONS",
-            "variable_type": "int",
-            "description": "Diffusion Tensor Imaging (no. of directions of availability)"
-        },
-        {
-            "metric_name": "FMRI_RESTING_STATE",
-            "variable_type": "int",
-            "description": "Collected resting-state fMRI?"
-        },
-        {
-            "metric_name": "FMRI_TASK_HAND",
-            "variable_type": "int",
-            "description": "Functional MRI task for the hand (0=no, 1=yes)"
-        },
-        {
-            "metric_name": "FMRI_TASK_WRIST",
-            "variable_type": "int",
-            "description": "Functional MRI task for the wrist (0=no, 1=yes)"
-        },
-        {
-            "metric_name": "T1",
-            "variable_type": "int",
-            "description": "T1 weighted structural MRI image/ modality (whether present or absent)"
-        },
-        {
-            "metric_name": "T2",
-            "variable_type": "int",
-            "description": "T2 weighted structural MRI image/ modality (whether present or absent)"
-        },
-        {
-            "metric_name": "T2_FLAIR",
-            "variable_type": "int",
-            "description": "T2 weighted structural MRI image/ modality (whether present or absent)"
-        }
-    ],
     "Motor_Lower_Extremity": [
         {
             "metric_name": "ABC_TOTAL",
@@ -840,9 +793,9 @@
             "description": "The 6-minute walk test (6MWT) is a sub-maximal exercise test that assesses aerobic capacity and endurance. During the test, you walk as far as you can in six minutes. The 6MWT can be used in preschool children (2-5 years), children (6-12 years) adults (18-64 years), elderly adults (65+) with a range of diagnoses. Also checks for balance, postural deficits, gait etc."
         }
     ],
-    "Motor_UE_and_LE": [
+    "Motor_General": [
         {
-            "metric_name": "FMA_TOTAL",
+            "metric_name": "FM_ALL_DOMAINS",
             "variable_type": "int",
             "description": "Fugl Meyer Assessment All Domains Total Score. Fugl Meyer Assessment (FM) evaluates and measures recovery in post-stroke hemiplegic patients. The Five domains assessed include 1) Motor function (UE maximum score = 66; LE maximum score = 34); 2) Sensory function (maximum score = 24); 3) Balance (maximum score = 14); 4) Joint range of motion (maximum score = 44); 5) Joint pain (maximum score = 44). Scoring: 0-226 (all domains)"
         },
@@ -865,6 +818,11 @@
             "metric_name": "MOTRICITY_ARM_LEG_NON_AFFECTED",
             "variable_type": "float",
             "description": "Test for assessing motor function - Upper Extremity tests: shoulder abduction, elbow flexion, pinch grip Lower Extremity tests: hip flexion, knee extension, dorsiflexion"
+        },
+        {
+            "metric_name": "NORMED_MOTOR",
+            "variable_type": "float",
+            "description": "Normed value for Motor scales scores"
         }
     ],
     "Motor_Upper_Extremity": [
@@ -1138,11 +1096,7 @@
             "variable_type": "float",
             "description": "Nine Hole Peg Test for the Non-affected side. The Nine Hole Peg Test (NHPT) was developed to measure finger dexterity, also known as fine manual dexterity. The NHPT is composed of a square board with 9 pegs. Scoring: time taken (in seconds) to complete the activity."
         },
-        {
-            "metric_name": "NORMED_MOTOR",
-            "variable_type": "float",
-            "description": "Normed value for Motor scales scores"
-        },
+
         {
             "metric_name": "NORMED_MOTOR_CTRL",
             "variable_type": "float",

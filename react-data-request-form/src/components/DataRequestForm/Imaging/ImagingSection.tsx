@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { RootState } from "../../../redux/store";
 import ImagingMetricInput from "./ImagingMetric";
 import styled from "styled-components";
 import { Card } from "react-bootstrap";

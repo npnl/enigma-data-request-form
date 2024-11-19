@@ -7,3 +7,6 @@ venv/
 .env_private.txt
 static/build/
 myenv/
+.env
+node_modules/
+package-lock.json

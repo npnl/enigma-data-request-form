@@ -6,7 +6,7 @@ const projectRoot = path.resolve(__dirname, '..'); // Navigate to the root direc
 const reactBuildDir = path.join(projectRoot, 'react-data-request-form', 'build');
 const flaskStaticDir = path.join(projectRoot, 'static');
 const reactBuildStaticDir = path.join(reactBuildDir, 'static');
-const flaskDataDir = path.join(flaskStaticDir, 'data');
+const flaskDataDir = path.join(flaskStaticDir, 'anonymized_data');
 
 async function moveFiles() {
   try {
@@ -33,7 +33,7 @@ async function moveFiles() {
     console.log('Moved build folder to the flask static directory.');
 
     // Copy the `data` directory to the `static/build` directory
-    await fs.copy(flaskDataDir, path.join(flaskStaticDir, 'build', 'data'));
+    await fs.copy(flaskDataDir, path.join(flaskStaticDir, 'build', 'anonymized_data'));
     console.log('Copied data folder into the build directory.');
 
   } catch (error) {

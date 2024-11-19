@@ -24,3 +24,17 @@ code {
   white-space: nowrap !important;
   text-overflow: clip !important;
 }
+
+.btn-pink {
+  /* background-color: #f5b3c7; */
+  border-color: #ff8fab;
+  border-width: 0.13rem;
+  color: #ff8fab;
+  cursor: pointer;
+}
+
+.btn-pink:hover {
+  background-color: #ff8fab; 
+  color: white; 
+}
+

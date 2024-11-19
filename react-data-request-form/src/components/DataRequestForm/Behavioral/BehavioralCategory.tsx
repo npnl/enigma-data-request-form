@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import BehavioralMetricInput from './BehavioralMetric';
-import { Metric } from '../../types/MetricsData';
+import { Metric } from '../../../types/MetricsData';
 import { Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleChevronRight, faCircleChevronDown } from '@fortawesome/free-solid-svg-icons';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
-import { setSelectedAll, setRequiredAll, resetRequiredAll, resetSelectedAll } from '../../redux/metricsSlice';
-import { RootState } from '../../redux/store';
+import { setSelectedAll, setRequiredAll, resetRequiredAll, resetSelectedAll } from '../../../redux/metricsSlice';
+import { RootState } from '../../../redux/store';
 
 // Styled components
 const StyledCard = styled(Card)`
