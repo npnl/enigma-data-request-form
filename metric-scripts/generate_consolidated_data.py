@@ -141,39 +141,38 @@ def replace_zero(all_df, cols):
 
 def main():
     # Replace imaging cols' 0 to nan values
-    # all_df = read_data('all_data.csv')
-    # all_df = replace_zero(all_df, [col for col in all_df.columns if 'in_BIDS' in col])
-    # write_data('all_data.csv', all_df)
+    all_df = read_data('all_data.csv')
+    all_df = replace_zero(all_df, [col for col in all_df.columns if 'in_BIDS' in col])
+    write_data('all_data.csv', all_df)
 
-    # all_df = read_data('all_data.csv')
+    all_df = read_data('all_data.csv')
 
-    # columns_to_convert = list(all_df.columns)
-    # columns_to_convert.remove('SESSION_ID')
+    columns_to_convert = list(all_df.columns)
+    columns_to_convert.remove('SESSION_ID')
 
-    # for col in columns_to_convert:
-    #     all_df[col] = all_df[col].notnull().astype(int)
+    for col in columns_to_convert:
+        all_df[col] = all_df[col].notnull().astype(int)
     
-    # write_data('all_data_boolean.csv', all_df)
+    write_data('tmp_anonymized_data.csv', all_df)
 
     # Convert session_id to indices
-    # all_df = read_data('all_data_boolean.csv')
-    # sessionIDs = list(all_df['SESSION_ID'])
-    # print(sessionIDs)
-    # subjectIDIndices = {}
-    # sessionID_mappings = {}
-    # for sessionID in sessionIDs:
-    #     if not sessionID or not pd.notna(sessionID):
-    #         continue
-    #     subjectID, sessionNum = sessionID.split('_ses-')
-    #     if subjectID not in subjectIDIndices:
-    #         subjectIDIndices[subjectID] = len(subjectIDIndices)
-    #     sessionID_mappings[sessionID] = f"{subjectIDIndices[subjectID]}_{sessionNum}"
-    # all_df['SESSION_ID'] = all_df['SESSION_ID'].replace(sessionID_mappings)
-    # write_data('all_data_boolean_subj.csv', all_df)
+    all_df = read_data('tmp_anonymized_data.csv')
+    sessionIDs = list(all_df['SESSION_ID'])
+    subjectIDIndices = {}
+    sessionID_mappings = {}
+    for sessionID in sessionIDs:
+        if not sessionID or not pd.notna(sessionID):
+            continue
+        subjectID, sessionNum = sessionID.split('_ses-')
+        if subjectID not in subjectIDIndices:
+            subjectIDIndices[subjectID] = len(subjectIDIndices)
+        sessionID_mappings[sessionID] = f"{subjectIDIndices[subjectID]}_{sessionNum}"
+    all_df['SESSION_ID'] = all_df['SESSION_ID'].replace(sessionID_mappings)
+    write_data('tmp_subj_anonymized_data.csv', all_df)
 
-    all_df = read_data('all_data_boolean_subj.csv')
+    all_df = read_data('tmp_subj_anonymized_data.csv')
     all_df = all_df.replace(0, np.nan)
-    write_data('all_data_boolean_subj.csv', all_df)
+    write_data('anonymized_data.csv', all_df)
     # all_df_json = all_df.to_dict(orient='records')
     # with open(os.getcwd() + '/boolean_data.json', 'w') as outfile:
     #     json.dump(all_df_json, outfile, indent=4)
