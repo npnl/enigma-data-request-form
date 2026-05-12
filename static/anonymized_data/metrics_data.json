@@ -4361,6 +4361,15 @@
                 "space": "native"
             },
             {
+                "metric_name": "VOL_WMHSYNTHSEG_WMH_LH_MNI_LESCORR_MM3",
+                "name": "Volume - LH WMH (MNI Space) - WMH-SynthSeg",
+                "variable_type": "float",
+                "description": "Volume of left hemisphere white matter hyperintensities (WMH) in MNI space in mm3 after lesion correction as derived from WMH-SynthSeg algorithm on T1-weighted MRI",
+                "show_order": null,
+                "essential": false,
+                "space": "mni"
+            },
+            {
                 "metric_name": "VOL_WMHSYNTHSEG_WMH_LH_ORIG_LESCORR_MM3",
                 "name": "Volume - LH WMH (Native Space) - WMH-SynthSeg",
                 "variable_type": "float",
@@ -4370,7 +4379,7 @@
                 "space": "native"
             },
             {
-                "metric_name": "VOL_WMHSYNTHSEG_WMH_LH_MNI_LESCORR_MM3",
+                "metric_name": "VOL_WMHSYNTHSEG_WMH_RH_MNI_LESCORR_MM3",
                 "name": "Volume - RH WMH (MNI Space) - WMH-SynthSeg",
                 "variable_type": "float",
                 "description": "Volume of left hemisphere white matter hyperintensities (WMH) in MNI space in mm3 after lesion correction as derived from WMH-SynthSeg algorithm on T1-weighted MRI",

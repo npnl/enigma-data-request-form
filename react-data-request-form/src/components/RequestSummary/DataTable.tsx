@@ -21,17 +21,17 @@ interface DataTableProps {
 const customStyles: TableStyles = {
   rows: {
     style: {
-      minHeight: "45px", // ensure this matches the type (e.g., string)
+      minHeight: "45px", 
     },
   },
   headCells: {
     style: {
       paddingLeft: "8px",
       paddingRight: "8px",
-      fontSize: "16px", // make sure these are string values
-      whiteSpace: "normal !important" as "normal", // assert specific allowed value
-      overflow: "visible !important" as "visible", // assert specific allowed value
-      textOverflow: "clip !important" as "clip", // assert specific allowed value
+      fontSize: "16px", 
+      whiteSpace: "normal !important" as "normal", 
+      overflow: "visible !important" as "visible", 
+      textOverflow: "clip !important" as "clip", 
     },
   },
   cells: {

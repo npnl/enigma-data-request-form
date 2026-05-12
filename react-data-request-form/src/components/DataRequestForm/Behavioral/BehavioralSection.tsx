@@ -32,25 +32,13 @@ const BehavioralMetricContainer: React.FC <BehavioralMetricContainerProps> = ({o
         const filteredSubcategories = Object.fromEntries(
           Object.entries(metricsData[category]).map(([subcategory, metrics]) => {
             const filteredMetrics = metrics.filter((m: any) => {
-              //if (!m.show) return false;
-
-              // Basic vs Advanced
               if (viewMode === "basic" && !m.essential) return false;
-              //if (viewMode === "advanced" && m.essential) return false;
-
-              // Space filtering
-              //if (m.space) {
-              //  if (spaceMode === "native" && m.space === "mni") return false;
-              //  if (spaceMode === "mni" && m.space === "native") return false;
-              //}
-
               return true;
             });
             return [subcategory, filteredMetrics];
           }).filter(([_, metrics]) => metrics.length > 0)
         );
 
-        // Skip category if no metrics left after filtering
         const hasAnyMetrics = Object.values(filteredSubcategories).some(
           (arr: any) => arr.length > 0
         );

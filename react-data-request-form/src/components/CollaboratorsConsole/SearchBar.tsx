@@ -12,27 +12,38 @@ interface SearchResult {
 interface SearchBarProps {
   collaborators: any[];
   onSelectCollaborator: (index: string) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  onSearch: (query: string) => void;
+  onClear: () => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ collaborators, onSelectCollaborator }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+const SearchBar: React.FC<SearchBarProps> = ({
+  collaborators,
+  onSelectCollaborator,
+  searchQuery,
+  onSearchQueryChange,
+  onSearch,
+  onClear,
+}) => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
+        if (searchQuery.trim() === "") {
+          onClear();
+        }
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [searchQuery, onClear]);
 
-  // Search logic
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setSearchResults([]);
@@ -41,9 +52,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ collaborators, onSelectCollaborat
     }
 
     const query = searchQuery.toLowerCase();
-    console.log("Search query:", query); // ✅ DEBUG
     
-    // Filter collaborators by email, first name, or last name
     const results = collaborators
       .filter((collab) => {
         const primaryEmail = (collab.primary_email || "").toLowerCase();
@@ -55,8 +64,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ collaborators, onSelectCollaborat
         const firstName = (collab.first_name || "").toLowerCase();
         const lastName = (collab.last_name || "").toLowerCase();
         const fullName = `${firstName} ${lastName}`.toLowerCase();
-        // ✅ DEBUG - log what we're checking
-      console.log("Checking:", { email, firstName, lastName, query });
+        
         return (
           allEmails.some(e => e.includes(query)) ||
           firstName.includes(query) ||
@@ -64,7 +72,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ collaborators, onSelectCollaborat
           fullName.includes(query)
         );
       })
-      .slice(0, 7) // Top 7 results
+      .slice(0, 7)
       .map((collab) => ({
         index: collab.index,
         email: collab.primary_email || collab.email || collab.email_list?.[0] || "",
@@ -72,16 +80,25 @@ const SearchBar: React.FC<SearchBarProps> = ({ collaborators, onSelectCollaborat
         last_name: collab.last_name || "",
         role: collab.role || "Member",
       }));
-    console.log("Total results:", results.length); // ✅ DEBUG
     setSearchResults(results);
     setShowDropdown(results.length > 0);
   }, [searchQuery, collaborators]);
 
   const handleSelectCollaborator = (index: string) => {
-    setSearchQuery("");
     setSearchResults([]);
     setShowDropdown(false);
     onSelectCollaborator(index);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      setShowDropdown(false);
+      if (searchQuery.trim() === "") {
+        onClear();
+      } else {
+        onSearch(searchQuery.trim());
+      }
+    }
   };
 
   const highlightMatch = (text: string, query: string) => {
@@ -135,9 +152,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ collaborators, onSelectCollaborat
         </svg>
         <Form.Control
           type="text"
-          placeholder="Search for a collaborator"
+          placeholder="Search for a collaborator (press Enter to filter table)"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => onSearchQueryChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
           style={{
             paddingLeft: "40px",

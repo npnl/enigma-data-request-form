@@ -7,6 +7,7 @@ import { showModal, hideModal } from "../redux/modalSlice";
 import { RootState } from "../redux/store";
 import { DataRequestOut, MetricOut, User } from "../types/DataRequest";
 import { Metric, Timepoint } from "../types/MetricsData";
+import { getCurrentUserToken } from "../services/authService";
 
 interface UserDataInputsProps {
   orGroups: {
@@ -70,7 +71,6 @@ const UserDataInputs: React.FC<UserDataInputsProps> = ({
           modalType: "loading",
         })
       );
-      // Insert your submit logic here
 
       let data: DataRequestOut = {
         requestor: { name: name, email: email },
@@ -114,7 +114,7 @@ const UserDataInputs: React.FC<UserDataInputsProps> = ({
           metrics
             .filter((m: any) => m.is_selected)
             .forEach((metric: Metric) => {
-              if (orMetricNames.has(metric.metric_name)) return; // skip if in OR
+              if (orMetricNames.has(metric.metric_name)) return;
               const entry = makeMetricEntry(metric, category);
               if (metric.is_required) data.behavior.required.push(entry);
               else data.behavior.optional.push(entry);
@@ -126,7 +126,7 @@ const UserDataInputs: React.FC<UserDataInputsProps> = ({
           metrics
             .filter((m: any) => m.is_selected)
             .forEach((metric: Metric) => {
-              if (orMetricNames.has(metric.metric_name)) return; // skip if in OR
+              if (orMetricNames.has(metric.metric_name)) return;
               const entry = makeMetricEntry(metric, category);
               if (metric.is_required) data.imaging.required.push(entry);
               else data.imaging.optional.push(entry);
@@ -149,7 +149,8 @@ const UserDataInputs: React.FC<UserDataInputsProps> = ({
         );
       } else {
         try {
-          const response = await ApiUtils.submitRequest(data);
+          const token = await getCurrentUserToken();
+          const response = await ApiUtils.submitRequest(data, token);
           dispatch(
             showModal({
               title: "Success",
@@ -166,11 +167,6 @@ const UserDataInputs: React.FC<UserDataInputsProps> = ({
             })
           );
         }
-        //   finally {
-        //     setTimeout(() => {
-        //       dispatch(hideModal());
-        //     }, 3000); // Hide the modal after 3 seconds
-        //   }
       }
     }
   };

@@ -48,15 +48,7 @@ interface ImagingMetricSectionProps {
 const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({ 
   category, metrics, openCategories, openSubcategories, setOpenCategories, setOpenSubcategories, highlightedMetric}) => {
   const dispatch = useDispatch()
-  //const allMetrics = Object.values(metrics).flat()
-  //const metricsData = useSelector((state: RootState) => state.metrics.behavioralMetrics[category])
-  //const isAllSelected = allMetrics.every((m) => m.is_selected)
-  //const isAllRequired = allMetrics.every((m) => m.is_required)
-  //const [isOpen, setIsOpen] = useState(false);
   const isOpen = openCategories[category] || false;
-  //const [openSubcategories, setOpenSubcategories] = useState<{
-  //    [key: string]: boolean;
-  //}>({});
   const allMetrics = Object.values(metrics).flat();
   const selectedCount = allMetrics.filter((m) => m.is_selected).length;
   const toggleOpen = () => {
@@ -64,7 +56,6 @@ const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({
       const isCurrentlyOpen = !!prevCategories[category];
       const newCategories = { ...prevCategories, [category]: !isCurrentlyOpen };
 
-      // If collapsing → close all its subcategories
       if (isCurrentlyOpen) {
         setOpenSubcategories((prevSubs) => {
           const updatedSubs = { ...prevSubs };
@@ -94,12 +85,9 @@ const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({
       if (allSelected) {
         dispatch(resetSelectedAll({ category, subcategory }));
         dispatch(resetRequiredAll({ category, subcategory }));
-        //dispatch(setSelectedAll({category}))
       }
       else {
         dispatch(setSelectedAll({ category, subcategory }));
-        //dispatch(resetSelectedAll({category}))
-        //dispatch(resetRequiredAll({category}))
       }
   };
 
@@ -107,57 +95,16 @@ const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({
       const subMetrics =metrics[subcategory];
       const allRequired = subMetrics.every((m) => m.is_required);
       if(allRequired){
-        //dispatch(setRequiredAll({category}))
         dispatch(resetRequiredAll({ category, subcategory }));
       }
       else {
         dispatch(setRequiredAll({ category, subcategory }));
-        //dispatch(resetRequiredAll({category}))
       }
   };
   const viewMode = useSelector((state: RootState) => state.metrics.viewMode);
-/*
-  return (
-    <StyledCard>
-      <Card.Body>
-        <CardHeader onClick={toggleOpen}>
-          <div className='d-flex'>
-        <FontAwesomeIcon style={{cursor: 'pointer'}} onClick={toggleOpen} icon={isOpen ? faCircleChevronDown : faCircleChevronRight} className="float-left pt-1 mr-2" />
-        <CardTitle>{category}</CardTitle>
-        </div>
-        </CardHeader>
-        {isOpen && (
-          <>
-          <div className="col-12 d-flex justify-content-start ml-1 mt-2">
-            <div className='mr-2'>
-              <StyleCheckbox type="checkbox" className="form-check-input" id={`select_all_${category}`} onChange={handleSelectAll} checked={isAllSelected}/>
-              <StyledLabel htmlFor={`select_all_${category}`}>Select All</StyledLabel>
-            </div>
-            {isAllSelected && <div>
-              <StyleCheckbox type="checkbox" className="form-check-input" id={`all_required_${category}`} onChange={handleRequiredAll} checked={isAllRequired} />
-              <StyledLabel htmlFor={`all_required_${category}`}>Make all required</StyledLabel>
-            </div>}
-          </div>
-            <div className="metrics-list row">
-              {metrics.map((metric) => (
-                <BehavioralMetricInput
-                  key={metric.metric_name}
-                  category={category}
-                  metricName={metric.metric_name}
-                  description={metric.description}
-                  type={metric.variable_type}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </Card.Body>
-    </StyledCard>
-  );*/
     return (
     <StyledCard>
           <Card.Body>
-            {/* Category header */}
             <CardHeader onClick={toggleOpen}>
               <div className="d-flex align-items-center">
                 <FontAwesomeIcon
@@ -172,7 +119,6 @@ const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({
               </small>
             </CardHeader>
     
-            {/* If category expanded */}
             {isOpen && (
               <>
                 {viewMode !== 'advanced' ? (
@@ -248,10 +194,8 @@ const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({
                   </div>
                 ) : (
                   <>
-                  {/* Metrics with subcategory = None */}
                   {metrics["None"] && (
                     <div className="metrics-list row mt-3 ml-2">
-                      {/* Subcategory-level toggles for 'None' */}
                       <div className="col-12 d-flex justify-content-start mb-2">
                         <div className="mr-3">
                           <StyleCheckbox
@@ -306,7 +250,6 @@ const ImagingMetricCategory: React.FC<ImagingMetricSectionProps> = ({
                     </div>
                   )}
     
-                  {/* List of subcategories */}
                     {Object.keys(metrics)
                       .filter((sub) => sub !== "None")
                       .map((subcategory) => {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import env from "../config";
-import { Navbar, Button, Badge, Spinner } from "react-bootstrap";
+import { Navbar, Button } from "react-bootstrap";
 import { auth } from "../firebaseConfig";
 import { logout } from "../services/authService";
 
@@ -11,9 +10,8 @@ const NavBar: React.FC = () => {
   
   const [selectedItem, setSelectedItem] = useState<string>("Menu");
   const [userAuth, setUserAuth] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [, setAuthLoading] = useState(true);
 
-  // Load user auth from localStorage
   useEffect(() => {
     const loadAuth = async () => {
       const authData = localStorage.getItem("userAuth");
@@ -26,6 +24,21 @@ const NavBar: React.FC = () => {
     };
     loadAuth();
   }, [auth.currentUser, location.pathname]);
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/") {
+      setSelectedItem("Home");
+    } else if (path === "/request-form") {
+      setSelectedItem("ENIGMA Stroke Recovery Group Data Request Form");
+    } else if (path.startsWith("/collaborators-directory")) {
+      setSelectedItem("Collaborators Console");
+    } else if (path === "/view-requests") {
+      setSelectedItem("View Data Requests");
+    } else if (path === "/authors-list") {
+      setSelectedItem("Authors List");
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -40,7 +53,6 @@ const NavBar: React.FC = () => {
 
   const isAuthenticated = !!auth.currentUser;
   const isAdmin = userAuth?.is_admin || false;
-  const canAccessCollaborators = userAuth?.can_access_collaborators_console || false;
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -66,9 +78,7 @@ const NavBar: React.FC = () => {
         <span className="navbar-toggler-icon"></span>
       </button>
       <div className="collapse navbar-collapse" id="navbarNavDropdown">
-        {/* Left-aligned navigation items */}
         <ul className="navbar-nav">
-          {/* Dropdown menu */}
           <li className="nav-item dropdown">
             <a
               className="nav-link dropdown-toggle"
@@ -85,7 +95,15 @@ const NavBar: React.FC = () => {
               className="dropdown-menu"
               aria-labelledby="navbarDropdownMenuLink"
             >
-              {/* Data Request Form - available to all authenticated users */}
+              {isAuthenticated && (
+                <Link
+                  className="dropdown-item"
+                  to="/"
+                  onClick={() => setSelectedItem("Home")}
+                >
+                  Home
+                </Link>
+              )}
               {isAuthenticated && (
                 <Link
                   className="dropdown-item"
@@ -99,9 +117,7 @@ const NavBar: React.FC = () => {
                   ENIGMA Stroke Recovery Group Data Request Form
                 </Link>
               )}
-              
-              {/* Collaborators Console - only for active collaborators + admins */}
-              {isAuthenticated && canAccessCollaborators && (
+              {isAuthenticated && (
                 <Link
                   className="dropdown-item"
                   to="/collaborators-directory"
@@ -110,8 +126,7 @@ const NavBar: React.FC = () => {
                   Collaborators Console
                 </Link>
               )}
-              
-              {/* Admin-only items */}
+            
               {isAuthenticated && isAdmin && (
                 <>
                   <div className="dropdown-divider"></div>
@@ -121,13 +136,6 @@ const NavBar: React.FC = () => {
                     onClick={() => setSelectedItem("View Data Requests")}
                   >
                     View Data Requests
-                  </Link>
-                  <Link
-                    className="dropdown-item"
-                    to="/qc-tool"
-                    onClick={() => setSelectedItem("Quality Control GBH Data")}
-                  >
-                    Quality Control GBH Data
                   </Link>
                   <Link
                     className="dropdown-item"
@@ -149,21 +157,6 @@ const NavBar: React.FC = () => {
             </li>
           )}
 
-          {/* Collaborators Console Admin Links */}
-          {location.pathname.includes("/collaborators-directory") &&
-            isAuthenticated &&
-            isAdmin && (
-              <>
-                <li className="nav-item">
-                  <Link
-                    className="nav-link"
-                    to="/collaborators-directory/collaborators"
-                  >
-                    Collaborators
-                  </Link>
-                </li>
-              </>
-            )}
         </ul>
 
         {/* Right-aligned items */}

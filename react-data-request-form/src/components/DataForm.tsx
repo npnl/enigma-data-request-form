@@ -2,23 +2,19 @@ import BehavioralMetricContainer from "./DataRequestForm/Behavioral/BehavioralSe
 import ImagingMetricContainer from "./DataRequestForm/Imaging/ImagingSection";
 import RecordCount from "./RecordsCount";
 import TimepointSelection from "./TimepointSelection";
-import env from "../config";
 import UserDataInputs from "./UserDataInputs";
-import { Button, Form, Dropdown } from "react-bootstrap";
+import { Button, Dropdown } from "react-bootstrap";
 import { useAppDispatch } from "../hooks";
 import { showModal } from "../redux/modalSlice";
-import { DataRequestOut, MetricOut } from "../types/DataRequest";
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import ApiUtils from "../api/ApiUtils";
 import { RootState } from "../redux/store";
-import { Metric } from "../types/MetricsData";
 import { useNavigate } from "react-router-dom";
-import { setDataSummary } from "../redux/requestsSlice";
 import SearchBar from './DataRequestForm/SearchBar';
 import {scroller} from 'react-scroll';
 import MetricsLogicSummary from './DataRequestForm/MetricsLogicSummary';
-import { restoreStateFromJSON, updateRowCount } from '../redux/metricsSlice';
+import { restoreStateFromJSON, updateRowCount, resetFormState } from '../redux/metricsSlice';
 import { parseJSONToState, createDownloadableState } from '../stateRestoration';
 import {getCurrentUserToken} from '../services/authService';
 
@@ -48,6 +44,13 @@ const DataForm = () => {
   useEffect(() => {
     const userAuth = JSON.parse(localStorage.getItem("userAuth") || "{}");
     setIsAdmin(userAuth.is_admin || false);
+  }, []);
+
+  useEffect(() => {
+    dispatch(updateRowCount());
+    return () => {
+      dispatch(resetFormState());
+    };
   }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [submittedRequests, setSubmittedRequests] = useState<any[]>([]);
@@ -90,16 +93,14 @@ const DataForm = () => {
       const token = await getCurrentUserToken();
       const requestData = await ApiUtils.fetchRequest(filename, token);
       const jsonData = {
-        request: requestData.data  // Wrap it in the expected structure
+        request: requestData.data  
       };
-      // Parse and restore state (reuse existing logic from upload)
       const restoredState = parseJSONToState(
         jsonData,
         metricsData.behavioralMetrics,
         metricsData.imagingMetrics
       );
 
-      // Dispatch restore action
       dispatch(restoreStateFromJSON({
         timepoint: restoredState.timepoint,
         behavioral: restoredState.behavioral,
@@ -108,14 +109,11 @@ const DataForm = () => {
         viewMode: restoredState.viewMode,
       }));
 
-      // Set OR groups summary in local state
       setOrGroups(restoredState.orGroupsSummary);
 
-      // Set notes and proposal status
       setUploadedNotes(restoredState.notes);
       setUploadedProposalStatus(restoredState.proposalStatus);
 
-      // Update row count
       await dispatch(updateRowCount()).unwrap();
       setCurrentLoadedRequest(filename);
       setLoadedRequestName(filename);
@@ -137,13 +135,13 @@ const DataForm = () => {
       );
     }
   };
-  // Clear the loaded request when filters change
+
   useEffect(() => {
-    // If user makes any changes, clear the loaded request
+
     setCurrentLoadedRequest("");
   }, [metricsData.behavioralMetrics, metricsData.imagingMetrics, metricsData.orGroups]);
 
-  // Format timestamp for display
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
@@ -167,14 +165,13 @@ const DataForm = () => {
       const fileContent = await file.text();
       const jsonData = JSON.parse(fileContent);
 
-      // Parse and restore state
+
       const restoredState = parseJSONToState(
         jsonData,
         metricsData.behavioralMetrics,
         metricsData.imagingMetrics
       );
 
-      // Dispatch restore action
       dispatch(restoreStateFromJSON({
         timepoint: restoredState.timepoint,
         behavioral: restoredState.behavioral,
@@ -184,11 +181,9 @@ const DataForm = () => {
       }));
       setOrGroups(restoredState.orGroupsSummary);
 
-      // Set notes and proposal status for UserDataInputs
       setUploadedNotes(restoredState.notes);
       setUploadedProposalStatus(restoredState.proposalStatus);
 
-      // Update row count
       dispatch(updateRowCount());
 
       dispatch(
@@ -199,7 +194,6 @@ const DataForm = () => {
         })
       );
 
-      // Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -216,7 +210,6 @@ const DataForm = () => {
   };
   const handleDownloadState = () => {
     try {
-      // Check if any metrics are selected
       const hasSelectedMetrics = 
         Object.values(metricsData.behavioralMetrics).some((subcats: any) =>
           Object.values(subcats).some((metrics: any) =>
@@ -240,10 +233,8 @@ const DataForm = () => {
         return;
       }
 
-      // Create the downloadable state
       const stateData = createDownloadableState(metricsData, metricsData.timepoint);
 
-      // Create blob and download
       const blob = new Blob([JSON.stringify(stateData, null, 2)], {
         type: "application/json",
       });
@@ -251,7 +242,6 @@ const DataForm = () => {
       const link = document.createElement("a");
       link.href = url;
       
-      // Generate filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
       link.download = `data-request-state-${timestamp}.json`;
       
@@ -279,7 +269,6 @@ const DataForm = () => {
     }
   };
         
-
   const handleSearchSelect = (category: string, subcategory: string | null, metric: string) => {
     setOpenCategories((prev) => ({ ...prev, [category]: true }));
     if (subcategory) {
@@ -296,120 +285,11 @@ const DataForm = () => {
         duration: 700,
         delay: 0,
         smooth: true,
-        offset: -100, // adjust to align nicely below navbar
+        offset: -100, 
       });
     }, 400);
-    setTimeout(() => setHighlightedMetric(null), 3000); // remove highlight after 3s
+    setTimeout(() => setHighlightedMetric(null), 3000); 
   }
-  /*
-  const handleSubmit = async () => {
-    dispatch(
-      showModal({
-        title: "Processing",
-        message: "Please wait...",
-        modalType: "loading",
-      })
-    );
-    // Insert your submit logic here
-
-    const data: DataRequestOut = {
-      timepoint: metricsData.timepoint,
-      behavior: { required: [], optional: [] },
-      imaging: { required: [], optional: [] },
-      or_groups: [],
-      notes: "",
-      requestor: undefined,
-    };
-    const makeMetricEntry = (metric: Metric, category: string) => ({
-      metric_name: metric.metric_name,
-      display_name:
-        metric.name && metric.name.toLowerCase() !== "none"
-          ? metric.name
-          : metric.metric_name,
-      value1: metric.filter_value1 || null,
-      value2: metric.filter_value2 || null,
-      type: metric.variable_type,
-      category,
-    });
-    const orMetricNames = new Set<string>();
-    if (orGroups && orGroups.length > 0) {
-      data.or_groups = orGroups.map((group, idx) => {
-        const groupMetrics = group.map((m) => {
-          orMetricNames.add(m.metricName);
-          return {
-            metric_name: m.metricName,
-            display_name: m.displayName,
-            type: m.type,
-            category: m.category,
-          };
-        });
-        return { group_id: idx + 1, metrics: groupMetrics };
-      });
-    }
-    Object.entries(metricsData.behavioralMetrics).forEach(([category, subcats]) => {
-      Object.values(subcats).forEach((metrics) => {
-        metrics
-          .filter((m: any) => m.is_selected)
-          .forEach((metric: Metric) => {
-            if (orMetricNames.has(metric.metric_name)) return;
-            const entry = makeMetricEntry(metric, category);
-            if (metric.is_required) data.behavior.required.push(entry);
-            else data.behavior.optional.push(entry);
-          });
-      });
-    });
-
-    Object.entries(metricsData.imagingMetrics).forEach(([category, subcats]) => {
-      Object.values(subcats).forEach((metrics) => {
-        metrics
-          .filter((m: any) => m.is_selected)
-          .forEach((metric: Metric) => {
-            if (orMetricNames.has(metric.metric_name)) return;
-            const entry = makeMetricEntry(metric, category);
-            if (metric.is_required) data.imaging.required.push(entry);
-            else data.imaging.optional.push(entry);
-          });
-      });
-    });
-    if (
-      data.behavior.required.length === 0 &&
-      data.behavior.optional.length === 0 &&
-      data.imaging.required.length === 0 &&
-      data.imaging.optional.length === 0 &&
-      (!data.or_groups || data.or_groups.length === 0)
-    ) {
-      dispatch(
-        showModal({
-          title: "Warning",
-          message: "You haven't selected any data!",
-          modalType: null,
-        })
-      );
-    } else {
-      try {
-        const token = await getCurrentUserToken();
-        const response = await ApiUtils.fetchDataAndSummary(data, token);
-        dispatch(setDataSummary(response));
-        navigate("view-data");
-        dispatch(
-          showModal({
-            title: "Success",
-            message: "Your request has been successfully submitted!",
-            modalType: "success",
-          })
-        );
-      } catch (error) {
-        dispatch(
-          showModal({
-            title: "Error",
-            message: "Failed to submit the request. Please try again.",
-            modalType: "error",
-          })
-        );
-      }
-    }
-  };
-  */
   useEffect(() => {
   const required: MetricSummary[] = [];
   const optional: MetricSummary[] = [];
@@ -483,7 +363,6 @@ const DataForm = () => {
           style={{ display: 'none' }}
           onChange={handleFileUpload}
         />
-        {/* Submitted Requests Dropdown */}
         <Dropdown>
           <Dropdown.Toggle
             variant="outline-primary" 
@@ -551,28 +430,23 @@ const DataForm = () => {
         setRequiredMetrics={setRequiredMetrics}
         setOptionalMetrics={setOptionalMetrics}
         setOrGroups={setOrGroups} />
-      {!isAdmin && (
-        <>
-          <UserDataInputs
-            orGroups={orGroups}
-            uploadedNotes={uploadedNotes}
-            uploadedProposalStatus={uploadedProposalStatus}
-          />
-        </>
-      )}
+      <UserDataInputs
+        orGroups={orGroups}
+        uploadedNotes={uploadedNotes}
+        uploadedProposalStatus={uploadedProposalStatus}
+      />
       {isAdmin && (
         <div className="d-flex justify-content-between mb-5 mt-3">
           <div className="d-flex justify-content-start">
             {currentLoadedRequest && (
-              <Button 
-                variant="outline-primary" 
-                className="mr-2" 
+              <Button
+                variant="outline-primary"
+                className="mr-2"
                 onClick={() => navigate(`/request-summary/${currentLoadedRequest}`)}
               >
               View Summary
             </Button>
             )}
-            {/*<Button variant="primary">Download Data</Button>*/}
           </div>
           <Button variant="outline-primary" onClick={handleDownloadState}>Download State</Button>
         </div>

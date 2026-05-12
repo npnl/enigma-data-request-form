@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
+import { Form, Button, Container, Row, Col, Card, Tooltip, OverlayTrigger, Modal } from "react-bootstrap";
 import { getCurrentUserToken } from "../../services/authService";
 import {useDispatch} from 'react-redux';
 import { showModal, hideModal } from "../../redux/modalSlice";
@@ -42,6 +42,7 @@ const DISCLOSURE_CATEGORIES = [
   { value: "stock_ownership", label: "Stock Ownership" },
   { value: "patents", label: "Patents/Royalties" },
   { value: "other", label: "Other" },
+  { value: "advisory_leadership_roles", label: "Advisory/Leadership Roles" },
 ];
 
 const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
@@ -69,8 +70,10 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
   const [allPIs, setAllPIs] = useState<Array<{ value: string; label: string }>>([]);
   const [selectedCohortForContributors, setSelectedCohortForContributors] = useState<string[]>([]);
   const [blanketOptIn, setBlanketOptIn] = useState<boolean>(false);
+  const [expandedCohorts, setExpandedCohorts] = useState<Set<string>>(new Set());
   const [cohortContributors, setCohortContributors] = useState<Array<{
     cohort: string;
+    cohort_orig?: string;
     members: Array<{
       first_name: string;
       last_name: string;
@@ -82,10 +85,13 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
   const [disclosures, setDisclosures] = useState<Array<{
     category: string;
     details: string;
+    patent_product?: string;
+    patent_ref?: string;
+    patent_institution?: string;
   }>>([{ category: "", details: "" }]);
   const [cohortFunding, setCohortFunding] = useState<Array<{
     cohort: string;
-    funding: string;
+    acknowledgements: Array<{ grant_source: string; ref_id: string }>;
   }>>([]);
 
   useEffect(() => {
@@ -94,7 +100,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
         const token = await getCurrentUserToken();
         const response = await ApiUtils.fetchCollaborators(token);
         
-        // Filter for PIs and Co-PIs
         const pisList = response
           .filter((collab: any) => collab.role === "PI" || collab.role === "Co-PI")
           .map((pi: any) => ({
@@ -131,7 +136,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     if (isAdmin) return true;
     
     if (userRole === "PI" || userRole === "Co-PI") {
-      // PI cannot edit cohort_enigma_list or role
       if (fieldName === "cohort_enigma_list" || fieldName === "role") {
         return false;
       }
@@ -139,7 +143,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     }
     
     if (userRole === "Member") {
-      // Member cannot edit cohort_enigma_list or role
       if (fieldName === "cohort_enigma_list" || fieldName === "role") {
         return false;
       }
@@ -170,7 +173,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     }
     setBlanketOptIn(dataFrame.blanket_opt_in === "yes");
 
-    // load degrees dropdown
     if (dataFrame.degrees) {
       setDegreeOptionsSelected(
         dataFrame.degrees.map((d: string) => ({ value: d, label: d }))
@@ -178,7 +180,12 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     }
 
     if (dataFrame.cohort_contributors && Array.isArray(dataFrame.cohort_contributors)) {
-      setCohortContributors(dataFrame.cohort_contributors);
+      const cohortOrigMap = dataFrame.cohort_orig_map || {};
+      const contributorsWithOrig = dataFrame.cohort_contributors.map((item: any) => ({
+        ...item,
+        cohort_orig: cohortOrigMap[item.cohort] || "",
+      }));
+      setCohortContributors(contributorsWithOrig);
       const cohortsWithContributors = dataFrame.cohort_contributors
         .map((item: any) => item.cohort)
         .filter((cohort: string) => cohort);
@@ -190,7 +197,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       setSelectedCohortForContributors([]);
     }
     //setContributingMembers(dataFrame.contributing_members || []);
-    // Load ALL institutions from the list fields
     const loadedInstitutions = [];
     const maxLength = Math.max(
       dataFrame.department_list?.length || 0,
@@ -212,7 +218,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       });
     }
 
-    // If no institutions exist, start with one empty institution
     if (loadedInstitutions.length === 0) {
       loadedInstitutions.push({
         department: "",
@@ -230,11 +235,28 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     setPiLastName(dataFrame.pi_last_name || "");
     //setCohortFundingAck(dataFrame.cohort_funding_ack || "");
     if (dataFrame.cohort_funding && Array.isArray(dataFrame.cohort_funding)) {
-      setCohortFunding(dataFrame.cohort_funding);
+      setCohortFunding(
+        dataFrame.cohort_funding.map((item: any) => {
+          if (Array.isArray(item.acknowledgements)) {
+            return { cohort: item.cohort, acknowledgements: item.acknowledgements };
+          }
+          if (item.grant_source !== undefined || item.ref_id !== undefined) {
+            return {
+              cohort: item.cohort,
+              acknowledgements: [{ grant_source: item.grant_source || "", ref_id: item.ref_id || "" }],
+            };
+          }
+          const funding = item.funding || "";
+          const match = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(funding);
+          const ack = match
+            ? { grant_source: match[1].trim(), ref_id: match[2].trim() }
+            : { grant_source: funding, ref_id: "" };
+          return { cohort: item.cohort, acknowledgements: [ack] };
+        })
+      );
     } else {
       setCohortFunding([]);
     }
-    //setContributingMembers(dataFrame.contributing_members || []);
     const cleanedFunding = (dataFrame.funding_ack || [])
       .flat()
       .map((item: any) => String(item || ''))
@@ -249,7 +271,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       const parsedDisclosures = cleanedDisclosures.map((disc: string) => {
         try {
           const parsed = JSON.parse(disc);
-          if (parsed.category && parsed.details) {
+          if (parsed.category && (parsed.details || parsed.patent_product || parsed.patent_ref || parsed.patent_institution)) {
             return parsed;
           }
         } catch (e) {
@@ -262,7 +284,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       setDisclosures([{ category: "", details: "" }]);
     }
   }, [dataFrame]);
-  // ⭐ ADD THIS NEW USEEFFECT - Sync blanketOptIn to localDataFrame
   useEffect(() => {
     setDataFrame((prev) => ({
       ...prev,
@@ -285,8 +306,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     
     if (!file) return;
 
-    // Check file size (max 2MB)
-    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
       dispatch(
         showModal({
@@ -298,7 +318,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       return;
     }
 
-    // Check file type
     if (!file.type.startsWith("image/")) {
       dispatch(
         showModal({
@@ -317,18 +336,16 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       })
     );
 
-    // Convert to base64
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       setPreviewUrl(base64String);
       try {
-      // Upload to S3
         const token = await getCurrentUserToken();
         const response = await ApiUtils.uploadProfilePicture(
           token, 
           base64String,
-          localDataFrame.index // Pass index for unique filename
+          localDataFrame.index
         );
         const imageUrl = response.url;
         setProfilePicture(imageUrl);
@@ -373,18 +390,15 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       const token = await getCurrentUserToken();
       const currentImageUrl = profilePicture || localDataFrame.profile_picture;
       
-      // Delete from S3 if there's an image
       if (currentImageUrl) {
         try {
           await ApiUtils.deleteProfilePicture(token, currentImageUrl);
           console.log("Image deleted from S3");
         } catch (error) {
           console.error("Error deleting image from S3:", error);
-          // Continue anyway to clear from profile
         }
       }
       
-      // Clear from state
       setProfilePicture("");
       setPreviewUrl("");
       setDataFrame({
@@ -399,16 +413,13 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
 
-    // Dropped outside any droppable area
     if (!destination) {
       return;
     }
 
-    // Dropped in the same list at the same position
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
       return;
     }
-    // Moving within the same list (reordering)
     if (source.droppableId === destination.droppableId) {
       if (source.droppableId === 'active-members') {
         const newActiveMembers = Array.from(activeMembers);
@@ -424,9 +435,8 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       return;
     }
 
-    // Moving between different lists
+   
     if (source.droppableId === 'active-members' && destination.droppableId === 'former-members') {
-      // Moving from Active to Former
       const newActiveMembers = Array.from(activeMembers);
       const newFormerMembers = Array.from(formerMembers);
       const [removed] = newActiveMembers.splice(source.index, 1);
@@ -434,7 +444,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       setActiveMembers(newActiveMembers);
       setFormerMembers(newFormerMembers);
     } else if (source.droppableId === 'former-members' && destination.droppableId === 'active-members') {
-      // Moving from Former to Active
       const newActiveMembers = Array.from(activeMembers);
       const newFormerMembers = Array.from(formerMembers);
       const [removed] = newFormerMembers.splice(source.index, 1);
@@ -485,23 +494,8 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     fetchRole();
   }, [newMember.email]);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [memberNotFoundEmail, setMemberNotFoundEmail] = useState<string | null>(null);
   const [funding, setFunding] = useState<string[]>([""]);
-  //const [disclosures, setDisclosures] = useState<string[]>([""]);
-
-  /*
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const token = await getCurrentUserToken();
-        const response = await ApiUtils.fetchCollaborators(token);
-        setCurrentMembers(response.current || []);
-        setPreviousMembers(response.previous || []);
-      } catch (error) {
-        console.error("Error fetching collaborators:", error);
-      }
-    };
-    fetchMembers();
-  }, []); */
   const handleAddMemberClick = () => {
     setShowAddMemberModal(true);
   };
@@ -521,7 +515,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       const existing = await ApiUtils.checkCollaboratorByEmail(token, newMember.email);
       const piLastName = localDataFrame.last_name;
       if (existing.exists) {
-        // Check if already in current members
         const alreadyAdded = activeMembers.some(
           (m) => m.email.toLowerCase() === existing.email.toLowerCase()
         );
@@ -545,7 +538,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
           console.log(`Updated pi_last_name for ${existing.email} to ${piLastName}`);
         } catch (error) {
           console.error("Error updating member's pi_last_name:", error);
-          // Continue anyway - we'll still add them to active members locally
         }
         const memberToAdd = {
           first_name: existing.first_name,
@@ -566,14 +558,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
         setNewMember({ first_name: "", MI: "", last_name: "", email: "", role: "Member" });
         return;
       }
-      dispatch(
-        showModal({
-          title: "Member Not Found",
-          message: `${newMember.email} is not in our system yet. Please contact them directly or reach out to NPNL (npnlusc@gmail.com) to send an invitation on your behalf.`,
-          modalType: "error",
-        })
-      );
-      
+      setMemberNotFoundEmail(newMember.email);
       setShowAddMemberModal(false);
       setNewMember({ first_name: "", MI: "", last_name: "", email: "", role: "Member" });
 
@@ -587,6 +572,17 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
         })
       );
     }
+  };
+  const toggleCohort = (cohort: string) => {
+    setExpandedCohorts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cohort)) {
+        newSet.delete(cohort);
+      } else {
+        newSet.add(cohort);
+      }
+      return newSet;
+    });
   };
   const addInstitution = () => {
     setInstitutions([
@@ -610,24 +606,19 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       return true;
     }
     // ORCID must be exactly 16 digits (no hyphens)
-    const cleaned = orcid.replace(/-/g, ""); // allow user to type with hyphens
-    return /^\d{16}$/.test(cleaned);
+    const cleaned = orcid.replace(/-/g, ""); 
+    return /^[0-9a-xA-X]{16}$/.test(cleaned);
   };
   const formatOrcid = (value: string) => {
     const trimmed = value.trim().toUpperCase();
   
-    // If it's "NA" or "N/A", keep it as is
     if (trimmed === "NA" || trimmed === "N/A") {
       return trimmed;
     }
-    // Remove non-digits
-    const digits = value.replace(/\D/g, "").slice(0, 16);
+    const chars = value.replace(/[^0-9a-xA-X]/gi, "").slice(0, 16);
 
-    // Insert hyphens: XXXX-XXXX-XXXX-XXXX
-    return digits
-      .replace(/(\d{4})(?=\d)/g, "$1-")
-      .replace(/(\d{4}-\d{4})(?=\d)/, "$1-")
-      .replace(/(\d{4}-\d{4}-\d{4})(?=\d)/, "$1-");
+    return chars
+      .replace(/(.{4})(?=.)/g, "$1-");
   };
   const updateContributingMembersCohorts = async (token: string) => {
     try {
@@ -652,7 +643,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
 
       for (const memberEmail of Array.from(allMemberEmails)) {
         try {
-          // Find member in all collaborators
           const allCollaborators = await ApiUtils.fetchCollaborators(token);
           const memberData = allCollaborators.find(
             (c: any) => c.email.toLowerCase() === memberEmail.toLowerCase()
@@ -664,22 +654,16 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
             continue;
           }
 
-          // Fetch full member details
           const fullMemberData = await ApiUtils.fetchCollaboratorByIndex(token, memberData.index);
-
-          // Get member's current cohorts
           const memberCohorts = fullMemberData.cohort_enigma_list || [];
-          
-          // Append PI's cohorts to member's cohorts (avoiding duplicates)
+      
           const combinedCohorts = [...memberCohorts, ...piCohorts];
           const updatedCohorts = Array.from(new Set(combinedCohorts));
 
-          // Check if anything changed
           if (JSON.stringify(memberCohorts.sort()) === JSON.stringify(updatedCohorts.sort())) {
-            continue; // No change needed
+            continue;
           }
 
-          // Update the member's cohort list with special flag
           const updatePayload = {
             index: fullMemberData.index,
             cohort_enigma_list: updatedCohorts,
@@ -723,7 +707,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     if (localDataFrame.orcid && !validateOrcid(localDataFrame.orcid)) {
       orcidError = "ORCID must be 16 digits or 'NA'.";
     }
-    // If there are errors → show them and stop submit
     if (emailError || orcidError) {
       setErrors({
         emails: emailError,
@@ -744,20 +727,16 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       country: ""
     };
 
-    // Build final payload
     const payload = {
        ...(action === "update" && { index: localDataFrame.index }),
       profile_picture: profilePicture || "",
-      // Keep multi-email system
       emails: emailList,
       first_name: localDataFrame.first_name || "",
       last_name: localDataFrame.last_name || "",
       MI: localDataFrame.MI || "",
-      // Degrees, ORCID
       degrees: localDataFrame.degrees || [],
       orcid: localDataFrame.orcid || "",
 
-      // Institution LIST fields expected by backend
       institutions: institutions.map(inst => ({
         department: inst.department || "",
         university: inst.university || "",
@@ -768,29 +747,38 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
       })),
       pi_last_name: localDataFrame.pi_last_name || [],
       blanket_opt_in: localDataFrame.blanket_opt_in || "",
-      // Cohorts
       cohort_enigma_list: localDataFrame.cohort_enigma_list || [],
-      cohort_orig_list: localDataFrame.cohort_orig_list || [],
+      //cohort_orig_list: localDataFrame.cohort_orig_list || [],
       role: localDataFrame.role || "Member",
-      // Members
       active_members: activeMembers || [],
       former_members: formerMembers || [],
       //contributing_members: contributingMembers || [],
       cohort_contributors: cohortContributors,
+      cohort_orig_map: cohortContributors.reduce((map, item) => {
+        if (item.cohort && item.cohort_orig) {
+          map[item.cohort] = item.cohort_orig;
+        }
+        return map;
+      }, {} as { [key: string]: string }),
       //cohort_funding_ack: cohortFundingAck || "",
-      cohort_funding: cohortFunding,
+      cohort_funding: cohortFunding.map(({ cohort, acknowledgements }) => ({
+        cohort,
+        acknowledgements: (acknowledgements || []).filter(a => a.grant_source.trim() || a.ref_id.trim()),
+      })),
       // Funding + Disclosures
       funding: funding.filter(f => f && f.trim()).length > 0 
       ? funding.filter(f => f && f.trim()) 
       : [],
-      disclosures: disclosures.filter(d => d.category && d.details && d.details.trim()).map
-      (d => JSON.stringify(d)),
+      disclosures: disclosures.filter(d => {
+        if (!d.category) return false;
+        if (d.category === 'patents') return !!(d.patent_product || d.patent_ref || d.patent_institution);
+        return d.details && d.details.trim();
+      }).map(d => JSON.stringify(d)),
       //credit_roles: localDataFrame.credit_roles,
     };
-    //console.log("PAYLOAD BEING SENT:", payload);
     if (isAdmin) {
       payload.cohort_enigma_list = localDataFrame.cohort_enigma_list || [];
-      payload.cohort_orig_list = localDataFrame.cohort_orig_list || [];
+      //payload.cohort_orig_list = localDataFrame.cohort_orig_list || [];
       payload.role = localDataFrame.role || "Member";
     }
     try {
@@ -802,7 +790,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
         }
       } else {
         payload.cohort_enigma_list = localDataFrame.cohort_enigma_list || [];
-        payload.cohort_orig_list = localDataFrame.cohort_orig_list || [];
+        //payload.cohort_orig_list = localDataFrame.cohort_orig_list || [];
         payload.role = localDataFrame.role || "Member";
         await ApiUtils.addCollaborator(token, payload);
       }
@@ -833,13 +821,11 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
     }
     const token = await getCurrentUserToken();
     try {
-      // Use index instead of id
       await ApiUtils.deleteCollaborator(token, localDataFrame.index);
       handleSubmit();
       console.log("User details deleted successfully");
     } catch (error) {
       console.error("Error deleting user details:", error);
-      // Show error to user
     }
   };
 
@@ -1027,7 +1013,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                 </Form.Group>
               </Col>
             </Row>
-            <div className="d-flex justify-content-end mb-3">
+            <div className="mb-3">
               <Button
                 variant="outline-primary"
                 size="sm"
@@ -1036,7 +1022,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                   setDataFrame({ ...localDataFrame, emails: newEmails });
                 }}
               >
-                + Add another email
+                + Add email
               </Button>
             </div>
             {localDataFrame.emails &&
@@ -1044,7 +1030,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                 <Row className="mb-3 align-items-end" key={index + 1}>
                   <Col md={12}>
                     <Form.Group controlId={`email_${index + 1}`}>
-                      <Form.Label className="fw-bold text-muted">
+                      <Form.Label className="text-muted">
                         Additional Email {index + 1}
                       </Form.Label>
                       <Form.Control
@@ -1086,7 +1072,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
             <Row className="mb-3">
               <Col md={localDataFrame.role === "Member" ? 4 : 12}>
                 <Form.Group controlId="role">
-                  <Form.Label>Role <span className="text-danger">*</span></Form.Label>
+                  <Form.Label>Role</Form.Label>
                   <Form.Select
                     value={localDataFrame.role || ""}
                     onChange={(e) => {
@@ -1106,7 +1092,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                   </Form.Select>
                   {!canEditField("role") && (
                     <Form.Text className="text-muted">
-                      Only admins can change roles
                     </Form.Text>
                   )}
                 </Form.Group>
@@ -1166,7 +1151,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                     />
                     {!isAdmin && userRole === "Member" && isUpdateMode && !!initialDataFrame.pi_last_name && (
                       <Form.Text className="text-muted">
-                        PI last name cannot be changed. Contact your PI or an admin if this needs to be updated.
+                        PI name cannot be changed. Contact your PI or an admin if this needs to be updated.
                       </Form.Text>
                     )}
                   </Form.Group>
@@ -1202,6 +1187,18 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
             {institutions.map((inst, index) => (
               <Card className="mb-3" key={index}>
                 <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0">Affiliation {index + 1}</h6>
+                    {institutions.length > 1 && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => removeInstitution(index)}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </Button>
+                    )}
+                  </div>
                   <Row className="mb-3">
                     <Col md={6}>
                       <Form.Group controlId={`department-${index}`}>
@@ -1300,34 +1297,35 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                         />
                       </Form.Group>
                     </Col>
-
-                    <Col md={1} className="d-flex justify-content-end">
-                      {institutions.length > 1 && (
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => removeInstitution(index)}
-                        >
-                          ×
-                        </Button>
-                      )}
-                    </Col>
                   </Row>
                 </Card.Body>
               </Card>
             ))}
-            <div className="d-flex justify-content-end mb-4">
+            <div className="mb-4">
               <Button variant="outline-primary" onClick={addInstitution}>
-                + Add Another Institution
+                + Add Affiliation
               </Button>
             </div>
             {(localDataFrame.role === "PI" || localDataFrame.role === "Co-PI") && action === 'update' && (
               <>
-                <Row className="align-items-center mb-3">
-                  <Col className="d-flex justify-content-end">
-                    <Button variant="outline-primary" onClick={handleAddMemberClick}>
-                      + Add Member
-                    </Button>
+                <Row className="align-items-center mb-2">
+                  <Col>
+                    <Form.Label className="mb-0" style={{ fontWeight: 400 }}>Affiliated Members
+                      <OverlayTrigger
+                        placement="right"
+                        overlay={
+                          <Tooltip id = "affiliated-members-tooltip">
+                            Manage your affiliated members (e.g. postdocs, graduate students, research assistants, lab technicians). 
+                            Use “+ Add Member” to add members, and drag and drop between Active Members and Former Members to indicate their current status. 
+                            Note that only “Active Members” have access to the ENIGMA data request form.
+                          </Tooltip>
+                        }
+                      >
+                        <span style={{ marginLeft: '8px', cursor: 'help' }}>
+                          <i className="bi bi-info-circle"></i>
+                        </span>
+                      </OverlayTrigger>
+                    </Form.Label>
                   </Col>
                 </Row>
                 <DragDropContext onDragEnd={handleDragEnd}>
@@ -1361,35 +1359,12 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                                         {...provided.dragHandleProps}
                                         style={{
                                           userSelect: 'none',
-                                          padding: '12px',
-                                          margin: '0 0 8px 0',
-                                          //backgroundColor: snapshot.isDragging ? '#bbdefb' : '#f5f5f5',
-                                          border: '1px solid #ddd',
-                                          borderRadius: '4px',
+                                          padding: '4px 0',
                                           cursor: 'grab',
-                                          display: 'inline-block',
-                                          width: 'auto',
-                                          maxWidth: '100%',
                                           ...provided.draggableProps.style,
                                         }}
                                       >
-                                        <div className="d-flex align-items-center">
-                                          <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            fill="currentColor"
-                                            className="bi bi-grip-vertical me-2"
-                                            viewBox="0 0 16 16"
-                                            style={{ color: '#999' }}
-                                          >
-                                            <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-                                          </svg>
-                                          <div>
-                                            <strong>{m.first_name} {m.last_name}</strong>
-                                            {/* <div className="text-muted small">{m.email}</div> */}
-                                          </div>
-                                        </div>
+                                            <span>• {m.first_name} {m.last_name}</span>
                                       </div>
                                     )}
                                   </Draggable>
@@ -1405,6 +1380,11 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                         </Droppable>
                       </Card.Body>
                     </Card>
+                    <div className="mt-2">
+                      <Button variant="outline-primary" size="sm" onClick={handleAddMemberClick}>
+                        + Add Member
+                      </Button>
+                    </div>
                   </Col>
                   
                   <Col md={6}>
@@ -1436,34 +1416,12 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                                         {...provided.dragHandleProps}
                                         style={{
                                           userSelect: 'none',
-                                          padding: '12px',
-                                          margin: '0 0 8px 0',
-                                          //backgroundColor: snapshot.isDragging ? '#ffe0b2' : '#f5f5f5',
-                                          border: '1px solid #ddd',
-                                          borderRadius: '4px',
+                                          padding: '4px 0',
                                           cursor: 'grab',
-                                          display: 'inline-block',  
-                                          width: 'auto',
-                                          maxWidth: '100%',
                                           ...provided.draggableProps.style,
                                         }}
                                       >
-                                        <div className="d-flex align-items-center">
-                                          <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            fill="currentColor"
-                                            className="bi bi-grip-vertical me-2"
-                                            viewBox="0 0 16 16"
-                                            style={{ color: '#999' }}
-                                          >
-                                            <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-                                          </svg>
-                                          <div>
-                                            <strong>{m.first_name} {m.last_name}</strong>
-                                          </div>
-                                        </div>
+                                            <span>• {m.first_name} {m.last_name}</span>
                                       </div>
                                     )}
                                   </Draggable>
@@ -1487,7 +1445,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
               {/* --- Cohort Info Row --- */}
               {(localDataFrame.role === "PI" || localDataFrame.role === "Co-PI") && (
               <Row className="mt-3 mb-3">
-                <Col md={6}>
+                <Col md={12}>
                   <Form.Group controlId="cohortEnigma">
                     <Form.Label className="mb-1">Cohort Name (ENIGMA)</Form.Label>
                     <Form.Control
@@ -1505,7 +1463,6 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                         });
                       }}
                       onBlur={(e) => {
-                        //Only split into array when user leaves the field
                         const value = e.target.value.trim();
                         if (value) {
                           const list = value
@@ -1527,42 +1484,16 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                     />
                   </Form.Group>
                 </Col>
-
-                <Col md={6}>
-                  <Form.Group controlId="cohortOrig">
-                    <Form.Label className="mb-1">Cohort Name (Orig)</Form.Label>
-                    <Form.Control
-                      type="text"
-                      //placeholder="Enter original cohort name"
-                      value={(localDataFrame.cohort_orig_list || []).join("; ")}
-                      onChange={(e) => {
-                        const list = e.target.value
-                          .split(";")
-                          .map((x) => x.trim())
-                          .filter((x) => x !== "");
-                        setDataFrame({
-                          ...localDataFrame,
-                          cohort_orig_list: list,
-                        })
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
               </Row>
             )}
-            {/* Contributing Members Section - Only for PI/Co-PI in update mode */}
             {(localDataFrame.role === "PI" || localDataFrame.role === "Co-PI") &&
               action === "update" && (
                 <Row className="mb-4">
                   <Col md={12}>
-                    <h5 className="mb-3">Contributing Members by Cohort</h5>
-                    <p className="text-muted" style={{ fontSize: "14px", marginBottom: "16px" }}>
-                      Select cohorts and assign contributing members with their CRediT roles for each cohort
-                    </p>
+                    <h5 className="mb-3" style={{fontWeight: 400}}>Cohort Information</h5>
 
-                    {/* Select Cohorts */}
                     <Form.Group className="mb-4">
-                      <Form.Label>Select Cohorts to Manage Contributors</Form.Label>
+                      <Form.Label>Select Cohorts to Manage</Form.Label>
                       <Select
                         isMulti
                         options={(Array.isArray(localDataFrame.cohort_enigma_list) ? localDataFrame.cohort_enigma_list : []).map((cohort: string) => ({
@@ -1576,10 +1507,11 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                           
                           // Initialize empty contributor arrays for newly selected cohorts
                           const updated = [...cohortContributors];
+                          const cohortOrigMap = localDataFrame.cohort_orig_map || {};
                           cohorts.forEach((cohort: string) => {
                             const exists = updated.some(c => c.cohort === cohort);
                             if (!exists) {
-                              updated.push({ cohort, members: [] });
+                              updated.push({ cohort, cohort_orig: cohortOrigMap[cohort] || "", members: [] });
                             }
                           });
                           setCohortContributors(updated);
@@ -1587,12 +1519,12 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                           cohorts.forEach((cohort: string) => {
                             const exists = updatedFunding.some(c => c.cohort === cohort);
                             if (!exists) {
-                              updatedFunding.push({ cohort, funding: "" });
+                              updatedFunding.push({ cohort, acknowledgements: [{ grant_source: "", ref_id: "" }] });
                             }
                           });
                           setCohortFunding(updatedFunding);
                         }}
-                        placeholder="Select cohorts to manage"
+                        //placeholder="Select cohorts to manage"
                         styles={{
                           control: (base) => ({
                             ...base,
@@ -1600,201 +1532,294 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                           }),
                         }}
                       />
-                      <Form.Text className="text-muted">
-                        You can manage contributors separately for each cohort
-                      </Form.Text>
                     </Form.Group>
 
                     {/* Display contributors for each selected cohort */}
                     {selectedCohortForContributors.map((cohort) => {
                       const cohortData = cohortContributors.find(c => c.cohort === cohort);
                       const cohortMembers = cohortData?.members || [];
-                      
+                      const cohortOrigName = cohortData?.cohort_orig || "";
                       const cohortFundingData = cohortFunding.find(c => c.cohort === cohort);
-                      const fundingText = cohortFundingData?.funding || "";
+                      const acknowledgements = cohortFundingData?.acknowledgements || [{ grant_source: "", ref_id: "" }];
+                      const isExpanded = expandedCohorts.has(cohort);
                       return (
                         <div
                           key={cohort}
                           style={{
-                            border: "2px solid #0d6efd",
-                            borderRadius: "12px",
-                            padding: "20px",
+                            border: "2px solid #e8ebf0",
+                            borderRadius: "8px",
+                            padding: "12px",
                             marginBottom: "24px",
                             backgroundColor: "#f8f9fa",
                           }}
                         >
-                          <h6 className="mb-3" style={{ color: "#0d6efd", fontWeight: 600 }}>
-                            Cohort: {cohort}
-                          </h6>
-                          {/* ✅ ADD COHORT FUNDING FIELD */}
-                          <Form.Group className="mb-4">
-                            <Form.Label style={{ fontWeight: 500 }}>
-                              Cohort Funding Acknowledgment
-                            </Form.Label>
-                            <Form.Control
-                              as="textarea"
-                              rows={3}
-                              placeholder={`Enter funding acknowledgment for cohort ${cohort}`}
-                              value={fundingText}
-                              onChange={(e) => {
-                                const updated = [...cohortFunding];
-                                const existingIndex = updated.findIndex(c => c.cohort === cohort);
-                                if (existingIndex >= 0) {
-                                  updated[existingIndex].funding = e.target.value;
-                                } else {
-                                  updated.push({ cohort, funding: e.target.value });
-                                }
-                                setCohortFunding(updated);
-                              }}
-                              style={{fontSize: "14px",}}
-                            />
-                            <Form.Text className="text-muted">
-                              Funding acknowledgment specific to this cohort
-                            </Form.Text>
-                          </Form.Group>
-                          {/* Select Contributing Members for this cohort */}
-                          <Form.Group className="mb-3">
-                            <Form.Label>Select Contributing Members</Form.Label>
-                            <Select
-                              isMulti
-                              options={[
-                                // Add PI/Co-PI themselves
-                                {
-                                  value: localDataFrame.emails?.[0] || "",
-                                  label: `${localDataFrame.first_name} ${localDataFrame.last_name} (You - ${localDataFrame.role})`,
-                                  data: {
-                                    first_name: localDataFrame.first_name,
-                                    last_name: localDataFrame.last_name,
-                                    email: localDataFrame.emails?.[0] || "",
-                                    role: localDataFrame.role,
-                                  },
-                                },
-                                // Add all active members
-                                ...activeMembers.map((member: any) => ({
-                                  value: member.email,
-                                  label: `${member.first_name} ${member.last_name} (${member.email})`,
-                                  data: member,
-                                })),
-                                // Add all former members
-                                ...formerMembers.map((member: any) => ({
-                                  value: member.email,
-                                  label: `${member.first_name} ${member.last_name} (${member.email}) - Former`,
-                                  data: member,
-                                })),
-                              ]}
-                              value={cohortMembers.map((member: any) => ({
-                                value: member.email,
-                                label: `${member.first_name} ${member.last_name}`,
-                                data: member,
-                              }))}
-                              onChange={(selected) => {
-                                const updatedMembers = (selected as any).map((option: any) => {
-                                  // Preserve existing credit_roles if member was already in the list
-                                  const existingMember = cohortMembers.find(
-                                    (m: any) => m.email === option.data.email
-                                  );
-                                  return {
-                                    first_name: option.data.first_name,
-                                    last_name: option.data.last_name,
-                                    email: option.data.email,
-                                    role: option.data.role,
-                                    credit_roles: existingMember?.credit_roles || [],
-                                  };
-                                });
-                                const updated = [...cohortContributors];
-                                const existingIndex = updated.findIndex(c => c.cohort === cohort);
-                                
-                                if (existingIndex >= 0) {
-                                  updated[existingIndex].members = updatedMembers;
-                                } else {
-                                  updated.push({ cohort, members: updatedMembers });
-                                }
-                                setCohortContributors(updated);
-                              }}
-                              placeholder="Select contributing members for this cohort"
-                              styles={{
-                                control: (base) => ({
-                                  ...base,
-                                  minHeight: "42px",
-                                }),
-                              }}
-                            />
-                          </Form.Group>
-
-                          {/* Display selected contributing members with CRediT roles */}
-                          {cohortMembers.length > 0 && (
-                            <div style={{ marginTop: "20px" }}>
-                              <h6 className="mb-3">Assign CRediT Roles</h6>
-                              {cohortMembers.map((member: any, memberIndex: number) => (
+                          <div
+                            onClick={() => toggleCohort(cohort)}
+                            style={{
+                              padding: "16px 20px",
+                              cursor: "pointer",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              borderBottom: isExpanded ? "1px solid #dee2e6" : "none",
+                            }}
+                          >
+                            <h6 className="mb-3" style={{ fontWeight: 600 }}>
+                              Cohort: {cohort}
+                            </h6>
+                            <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`} style={{ fontSize: "1.2rem" }}></i>
+                          </div>
+                          {isExpanded && (
+                            <div style={{ padding: "20px" }}>
+                              <Form.Group className="mb-3">
+                                <Form.Label> Cohort Name (Orig) </Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  value={cohortOrigName}
+                                  onChange={(e) => {
+                                    const updated = [...cohortContributors];
+                                    const existingIndex = updated.findIndex(c => c.cohort === cohort);
+                                    if (existingIndex >= 0) {
+                                      updated[existingIndex].cohort_orig = e.target.value;
+                                    } else {
+                                      updated.push({ cohort, cohort_orig: e.target.value, members: [] });
+                                    }
+                                    setCohortContributors(updated);
+                                  }}
+                                  style={{ fontSize: "14px" }}
+                                />
+                              </Form.Group>
+                              {acknowledgements.map((ack, ackIdx) => (
                                 <div
-                                  key={memberIndex}
+                                  key={ackIdx}
                                   style={{
                                     border: "1px solid #dee2e6",
-                                    borderRadius: "8px",
-                                    padding: "16px",
+                                    borderRadius: "6px",
+                                    padding: "12px",
                                     marginBottom: "12px",
-                                    backgroundColor: "white",
+                                    backgroundColor: "#fff",
                                   }}
                                 >
-                                  <div style={{ marginBottom: "12px" }}>
-                                    <div style={{ fontWeight: 600, fontSize: "15px" }}>
-                                      {member.first_name} {member.last_name}
-                                      {member.email === (localDataFrame.emails?.[0] || "") && (
-                                        <span
-                                          style={{
-                                            marginLeft: "8px",
-                                            fontSize: "12px",
-                                            color: "#0d6efd",
-                                            fontWeight: 500,
-                                          }}
-                                        >
-                                          (You)
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div style={{ fontSize: "13px", color: "#6c757d" }}>
-                                      {member.email}
-                                    </div>
-                                  </div>
-
-                                  {/* CRediT Roles for this member in this cohort */}
-                                  <Form.Group>
-                                    <Form.Label style={{ fontSize: "13px", fontWeight: 500 }}>
-                                      CRediT Roles
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                                    <Form.Label style={{ fontWeight: 600, marginBottom: 0, fontSize: "13px" }}>
+                                      Funding Acknowledgement {ackIdx + 1}
                                     </Form.Label>
-                                    <Select
-                                      isMulti
-                                      options={CREDIT_ROLES}
-                                      value={(member.credit_roles || []).map((role: string) => ({
-                                        value: role,
-                                        label: role,
-                                      }))}
-                                      onChange={(selected) => {
-                                        const updated = [...cohortContributors];
-                                        const cohortIndex = updated.findIndex(c => c.cohort === cohort);
-                                        if (cohortIndex >= 0) {
-                                          updated[cohortIndex].members[memberIndex] = {
-                                            ...member,
-                                            credit_roles: (selected as any).map((s: any) => s.value),
-                                          };
-                                          setCohortContributors(updated);
-                                        }  
+                                    {acknowledgements.length > 1 && (
+                                      <Button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        style={{ padding: "2px 8px", lineHeight: 1.2 }}
+                                        onClick={() => {
+                                          const updated = [...cohortFunding];
+                                          const idx = updated.findIndex(c => c.cohort === cohort);
+                                          if (idx >= 0) {
+                                            const newAcks = updated[idx].acknowledgements.filter((_, i) => i !== ackIdx);
+                                            updated[idx] = { ...updated[idx], acknowledgements: newAcks };
+                                            setCohortFunding(updated);
+                                          }
+                                        }}
+                                      >
+                                        &minus;
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Form.Group className="mb-2">
+                                    <Form.Label style={{ fontSize: "13px" }}>Grant/Funding Source</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      placeholder="e.g. NIH, DARPA"
+                                      value={ack.grant_source}
+                                      onChange={(e) => {
+                                        const updated = [...cohortFunding];
+                                        const idx = updated.findIndex(c => c.cohort === cohort);
+                                        if (idx >= 0) {
+                                          const newAcks = updated[idx].acknowledgements.map((a, i) =>
+                                            i === ackIdx ? { ...a, grant_source: e.target.value } : a
+                                          );
+                                          updated[idx] = { ...updated[idx], acknowledgements: newAcks };
+                                        } else {
+                                          updated.push({ cohort, acknowledgements: [{ grant_source: e.target.value, ref_id: "" }] });
+                                        }
+                                        setCohortFunding(updated);
                                       }}
-                                      placeholder="Select contributor roles"
-                                      styles={{
-                                        control: (base) => ({
-                                          ...base,
-                                          minHeight: "38px",
-                                          fontSize: "13px",
-                                        }),
-                                      }}
+                                      style={{ fontSize: "14px" }}
                                     />
-                                    <Form.Text className="text-muted">
-                                      Select all roles for this contributor in cohort {cohort}
-                                    </Form.Text>
+                                  </Form.Group>
+                                  <Form.Group className="mb-0">
+                                    <Form.Label style={{ fontSize: "13px" }}>Reference Number/ID</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      placeholder="e.g. R01 4104100"
+                                      value={ack.ref_id}
+                                      onChange={(e) => {
+                                        const updated = [...cohortFunding];
+                                        const idx = updated.findIndex(c => c.cohort === cohort);
+                                        if (idx >= 0) {
+                                          const newAcks = updated[idx].acknowledgements.map((a, i) =>
+                                            i === ackIdx ? { ...a, ref_id: e.target.value } : a
+                                          );
+                                          updated[idx] = { ...updated[idx], acknowledgements: newAcks };
+                                        } else {
+                                          updated.push({ cohort, acknowledgements: [{ grant_source: "", ref_id: e.target.value }] });
+                                        }
+                                        setCohortFunding(updated);
+                                      }}
+                                      style={{ fontSize: "14px" }}
+                                    />
                                   </Form.Group>
                                 </div>
                               ))}
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="mb-4"
+                                onClick={() => {
+                                  const updated = [...cohortFunding];
+                                  const idx = updated.findIndex(c => c.cohort === cohort);
+                                  if (idx >= 0) {
+                                    updated[idx] = {
+                                      ...updated[idx],
+                                      acknowledgements: [...updated[idx].acknowledgements, { grant_source: "", ref_id: "" }],
+                                    };
+                                  } else {
+                                    updated.push({ cohort, acknowledgements: [{ grant_source: "", ref_id: "" }, { grant_source: "", ref_id: "" }] });
+                                  }
+                                  setCohortFunding(updated);
+                                }}
+                                style={{ fontSize: "13px" }}
+                              >
+                                + Add Funding Acknowledgement
+                              </Button>
+                              {/* Select Contributing Members for this cohort */}
+                              <Form.Group className="mb-3">
+                                <Form.Label>Select Contributing Members</Form.Label>
+                                <p className="text-muted" style={{ fontSize: "14px", marginBottom: "16px" }}>
+                                  Identify contributing members to this cohort and assign CRediT roles
+                                </p>
+                                <Select
+                                  isMulti
+                                  options={[
+                                    {
+                                      value: localDataFrame.emails?.[0] || "",
+                                      label: `${localDataFrame.first_name} ${localDataFrame.last_name}`,
+                                      data: {
+                                        first_name: localDataFrame.first_name,
+                                        last_name: localDataFrame.last_name,
+                                        email: localDataFrame.emails?.[0] || "",
+                                        role: localDataFrame.role,
+                                      },
+                                    },
+                                    ...activeMembers.map((member: any) => ({
+                                      value: member.email,
+                                      label: `${member.first_name} ${member.last_name}`,
+                                      data: member,
+                                    })),
+                                    ...formerMembers.map((member: any) => ({
+                                      value: member.email,
+                                      label: `${member.first_name} ${member.last_name} (Former member)`,
+                                      data: member,
+                                    })),
+                                  ]}
+                                  value={cohortMembers.map((member: any) => ({
+                                    value: member.email,
+                                    label: `${member.first_name} ${member.last_name}`,
+                                    data: member,
+                                  }))}
+                                  onChange={(selected) => {
+                                    const updatedMembers = (selected as any).map((option: any) => {
+                                      // Preserve existing credit_roles if member was already in the list
+                                      const existingMember = cohortMembers.find(
+                                        (m: any) => m.email === option.data.email
+                                      );
+                                      return {
+                                        first_name: option.data.first_name,
+                                        last_name: option.data.last_name,
+                                        email: option.data.email,
+                                        role: option.data.role,
+                                        credit_roles: existingMember?.credit_roles || [],
+                                      };
+                                    });
+                                    const updated = [...cohortContributors];
+                                    const existingIndex = updated.findIndex(c => c.cohort === cohort);
+                                    
+                                    if (existingIndex >= 0) {
+                                      updated[existingIndex].members = updatedMembers;
+                                    } else {
+                                      updated.push({ cohort, members: updatedMembers });
+                                    }
+                                    setCohortContributors(updated);
+                                  }}
+                                  //placeholder="Select contributing members for this cohort"
+                                  styles={{
+                                    control: (base) => ({
+                                      ...base,
+                                      minHeight: "42px",
+                                    }),
+                                  }}
+                                />
+                              </Form.Group>
+
+                              {/* Display selected contributing members with CRediT roles */}
+                              {cohortMembers.length > 0 && (
+                                <div style={{ marginTop: "20px" }}>
+                                  <h6 className="mb-3">Assign CRediT Roles</h6>
+                                  {cohortMembers.map((member: any, memberIndex: number) => (
+                                    <div
+                                      key={memberIndex}
+                                      style={{
+                                        border: "1px solid #dee2e6",
+                                        borderRadius: "8px",
+                                        padding: "16px",
+                                        marginBottom: "12px",
+                                        backgroundColor: "white",
+                                      }}
+                                    >
+                                      <div style={{ marginBottom: "12px" }}>
+                                        <div style={{ fontWeight: 600, fontSize: "15px" }}>
+                                          {member.first_name} {member.last_name}
+                                        </div>
+                                        <div style={{ fontSize: "13px", color: "#6c757d" }}>
+                                          {member.email}
+                                        </div>
+                                      </div>
+
+                                      {/* CRediT Roles for this member in this cohort */}
+                                      <Form.Group>
+                                        <Form.Label style={{ fontSize: "13px", fontWeight: 500 }}>
+                                          CRediT Roles
+                                        </Form.Label>
+                                        <Select
+                                          isMulti
+                                          options={CREDIT_ROLES}
+                                          value={(member.credit_roles || []).map((role: string) => ({
+                                            value: role,
+                                            label: role,
+                                          }))}
+                                          onChange={(selected) => {
+                                            const updated = [...cohortContributors];
+                                            const cohortIndex = updated.findIndex(c => c.cohort === cohort);
+                                            if (cohortIndex >= 0) {
+                                              updated[cohortIndex].members[memberIndex] = {
+                                                ...member,
+                                                credit_roles: (selected as any).map((s: any) => s.value),
+                                              };
+                                              setCohortContributors(updated);
+                                            }  
+                                          }}
+                                          placeholder="Select contributor roles"
+                                          styles={{
+                                            control: (base) => ({
+                                              ...base,
+                                              minHeight: "38px",
+                                              fontSize: "13px",
+                                            }),
+                                          }}
+                                        />
+                                      </Form.Group>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1818,10 +1843,9 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
                   </Col>
                 </Row>
               )}
-          {/* --- Funding Acknowledgments --- */}
           <Row className="mt-3">
             <Col>
-              <h5 className="mb-2" style={{ fontWeight: 400 }}>Individual Funding Acknowledgment</h5>
+              <Form.Label className="mb-0" style={{ fontWeight: 400 }}>Individual Funding Acknowledgment</Form.Label>
               <Form.Text className="text-muted d-block mb-3">
                 Please include funding ID (e.g. grant number) and funding agency/entity as applicable. 
                 Example: "NIH R01 0000000"
@@ -1866,7 +1890,7 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
               </Col>
             </Row>
           ))}
-          <div className="d-flex justify-content-end mb-4">
+          <div className="mb-4">
             <Button
               variant="outline-primary"
               onClick={() => setFunding([...funding, ""])}
@@ -1874,66 +1898,135 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
               + Add Funding Acknowledgment
             </Button>
           </div>
-          {/* --- Disclosures --- */}
           <Row className="mt-3">
             <Col>
-              <h5 className="mb-2" style={{ fontWeight: 400 }}>Disclosures</h5>
+              {/*<h5 className="mb-2">Disclosures</h5>*/}
+              <Form.Label className="mb-0" style={{ fontWeight: 400 }}>Disclosures</Form.Label>
               <Form.Text className="text-muted d-block mb-3">
                 Declare any competing interests, funding sources, or other conflicts
               </Form.Text>
             </Col>
           </Row>
 
-          {disclosures.map((disclosure, idx) => (
-            <Row className="mb-2" key={idx}>
-              <Col md={3}>
-                <Form.Select
-                  value={disclosure.category}
-                  onChange={(e) => {
-                    const updated = [...disclosures];
-                    updated[idx].category = e.target.value;
-                    setDisclosures(updated);
-                  }}
-                >
-                  {DISCLOSURE_CATEGORIES.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-              
-              <Col md={9}>
-                <Form.Control
-                  type="text"
-                  placeholder="Provide details..."
-                  value={disclosure.details}
-                  onChange={(e) => {
-                    const updated = [...disclosures];
-                    updated[idx].details = e.target.value;
-                    setDisclosures(updated);
-                  }}
-                />
-              </Col>
-              
-              <Col md={1} className="d-flex align-items-center justify-content-center">
-                {disclosures.length > 1 && (
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => {
-                      setDisclosures(disclosures.filter((_, i) => i !== idx));
-                    }}
-                    title="Remove disclosure"
-                  >
-                    <i className="bi bi-trash"></i>
-                  </Button>
-                )}
-              </Col>
-            </Row>
-          ))}
+          {disclosures.map((disclosure, idx) => {
+            const isPatents = disclosure.category === 'patents';
+            const isOther = disclosure.category === 'other';
+            const hasEntityPlaceholder = ['competing_interest', 'funding_source', 'employment', 'consulting', 'stock_ownership', 'advisory_leadership_roles'].includes(disclosure.category);
+            const detailsPlaceholder = hasEntityPlaceholder ? 'Company/Institution/Entity' : 'Provide details...';
 
-          <div className="d-flex justify-content-end mb-4">
+            return (
+              <Row className="mb-2" key={idx}>
+                <Col md={3}>
+                  <Form.Select
+                    value={disclosure.category}
+                    onChange={(e) => {
+                      const updated = [...disclosures];
+                      updated[idx] = { category: e.target.value, details: '', patent_product: '', patent_ref: '', patent_institution: '' };
+                      setDisclosures(updated);
+                    }}
+                  >
+                    {DISCLOSURE_CATEGORIES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+
+                <Col md={9}>
+                  {isPatents ? (
+                    <div>
+                      <div className="d-flex gap-2 align-items-center mb-1">
+                        <Form.Control
+                          type="text"
+                          placeholder="Product name"
+                          value={disclosure.patent_product || ''}
+                          onChange={(e) => {
+                            const updated = [...disclosures];
+                            updated[idx] = { ...updated[idx], patent_product: e.target.value };
+                            setDisclosures(updated);
+                          }}
+                        />
+                        <Form.Control
+                          type="text"
+                          placeholder="Reference number"
+                          value={disclosure.patent_ref || ''}
+                          onChange={(e) => {
+                            const updated = [...disclosures];
+                            updated[idx] = { ...updated[idx], patent_ref: e.target.value };
+                            setDisclosures(updated);
+                          }}
+                        />
+                        <Form.Control
+                          type="text"
+                          placeholder="Institution/Entity"
+                          value={disclosure.patent_institution || ''}
+                          onChange={(e) => {
+                            const updated = [...disclosures];
+                            updated[idx] = { ...updated[idx], patent_institution: e.target.value };
+                            setDisclosures(updated);
+                          }}
+                          style={{ paddingRight: disclosures.length > 1 ? '35px' : '12px', position: 'relative' }}
+                        />
+                        {disclosures.length > 1 && (
+                          <span
+                            onClick={() => setDisclosures(disclosures.filter((_, i) => i !== idx))}
+                            style={{ cursor: 'pointer', color: '#888', fontWeight: 'bold', fontSize: '1.1rem', whiteSpace: 'nowrap' }}
+                          >
+                            ×
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ position: 'relative' }}>
+                      <Form.Control
+                        type="text"
+                        placeholder={detailsPlaceholder}
+                        value={disclosure.details}
+                        onChange={(e) => {
+                          const updated = [...disclosures];
+                          updated[idx] = { ...updated[idx], details: e.target.value };
+                          setDisclosures(updated);
+                        }}
+                        style={{ paddingRight: disclosures.length > 1 ? '35px' : '12px' }}
+                      />
+                      {disclosures.length > 1 && (
+                        <span
+                          onClick={() => setDisclosures(disclosures.filter((_, i) => i !== idx))}
+                          style={{
+                            position: 'absolute',
+                            right: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            cursor: 'pointer',
+                            color: '#888',
+                            fontWeight: 'bold',
+                            fontSize: '1.1rem',
+                            zIndex: 5,
+                          }}
+                        >
+                          ×
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {hasEntityPlaceholder && (
+                    <Form.Text className="text-muted" style={{ fontSize: '11px' }}>
+                      Please put each company/institution/entity on its own disclosure entry.
+                    </Form.Text>
+                  )}
+                  {isOther && (
+                    <Form.Text className="text-muted" style={{ fontSize: '11px' }}>
+                      Please note that we do our best to automate this information for manuscripts, so please format the information as you might put it in a manuscript.
+                    </Form.Text>
+                  )}
+                </Col>
+              </Row>
+            );
+          })}
+
+          <div className="mb-4">
             <Button
               variant="outline-primary"
               onClick={() => setDisclosures([...disclosures, { category: "", details: "" }])}
@@ -1945,25 +2038,47 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
             <Row className="mb-3">
               <Col md={12}>
                 <Form.Group controlId="blanket_opt_in">
-                  <Form.Label>
-                    <h5 className="mb-2" style={{ fontWeight: 400 }}>Blanket Opt-in</h5>
+                  <Form.Label className="mb-0" style={{ fontWeight: 400 }}>Blanket Opt-in
+                    <OverlayTrigger
+                      placement="right"
+                      overlay={
+                        <Tooltip id="blanket-opt-in-tooltip">
+                          Please toggle if you would like for your data to be used for any relevant 
+                          ENIGMA Stroke Recovery analyses. If you fill this out, you will not be 
+                          required to fill out future follow-up opt-in forms.
+                        </Tooltip>
+                      }
+                    >
+                      <span style={{ marginLeft: '8px', cursor: 'help' }}>
+                        <i className="bi bi-info-circle"></i>
+                      </span>
+                    </OverlayTrigger>
                   </Form.Label>
-                  <div>
-                    <Form.Check
-                      type="switch"
-                      id="blanket-opt-in-switch"
-                      checked={blanketOptIn}
-                      onChange={(e) => setBlanketOptIn(e.target.checked)}
+                  <div className="btn-group d-block mt-2" role="group">
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${!blanketOptIn ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => setBlanketOptIn(false)}
                       disabled={!canEditField("blanket_opt_in")}
-                      label=""
-                    />
+                      style={{ width: '60px', padding: '4px 8px' }}
+                    >
+                      No
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${blanketOptIn ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => setBlanketOptIn(true)}
+                      disabled={!canEditField("blanket_opt_in")}
+                      style={{ width: '60px', padding: '4px 8px' }}
+                    >
+                      Yes
+                    </button>
                   </div>
                 </Form.Group>
               </Col>
             </Row>
           )}
 
-            {/* --- Action Buttons --- */}
             <div className="d-flex justify-content-between mt-5">
               {action === "update" && canDelete && (
                 <Button
@@ -2077,6 +2192,23 @@ const CollaboratorDetails: React.FC<CollaboratorDetailsProps> = ({
           </Form>
         </ModalComponent>
       )}
+
+      <Modal show={!!memberNotFoundEmail} onHide={() => setMemberNotFoundEmail(null)} centered>
+        <Modal.Header closeButton style={{ backgroundColor: "red", color: "white" }}>
+          <Modal.Title>Member Not Found</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            {memberNotFoundEmail} is not in our system yet. Please reach out to{" "}
+            <a href="mailto:mhkhan@usc.edu">mhkhan@usc.edu</a> to create a profile.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setMemberNotFoundEmail(null)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

@@ -2,11 +2,8 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useAppDispatch } from "../hooks";
-import {
-  setTimepointAndUpdateRowCount,
-  setViewMode,
-} from "../redux/metricsSlice";
-import { Switch, FormControlLabel, Divider, Box } from "@mui/material";
+import { setTimepointAndUpdateRowCount, setViewMode } from "../redux/metricsSlice";
+import { Divider, Box } from "@mui/material";
 import SmallToggle from "./DataRequestForm/SmallToggle";
 
 const TimepointSelection = () => {
@@ -28,7 +25,6 @@ const TimepointSelection = () => {
 
   return (
     <Box mt={3} mb={2}>
-      {/* --- Data Type --- */}
       <SmallToggle
         leftLabel="Cross-sectional (Baseline Only)"
         rightLabel="Longitudinal"
@@ -36,7 +32,6 @@ const TimepointSelection = () => {
         onChange={handleTimepointToggle}
       />
 
-      {/* --- Metric Set --- */}
       <Box mt={1.5}>
         <SmallToggle
           leftLabel="Basic Metrics"

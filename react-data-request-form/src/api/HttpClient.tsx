@@ -32,7 +32,7 @@ export default class HttpClient {
         headers: headers,
       });
       if (!response.ok) {
-        // ⭐ Try to get error message from response
+        
         try {
           const errorData = await response.json();
           const errorMessage = errorData.message || errorData.error || `Error: ${response.status}`;
@@ -51,7 +51,6 @@ export default class HttpClient {
     }
   }
 
-  // Method to perform a POST request
   public static async post<T>(endpoint: string, data: any, authToken: string | null = null): Promise<T> {
     try {
       let headers: { [key: string]: string } = {
@@ -104,7 +103,7 @@ public static async delete<T>(endpoint: string, data: any, authToken: string | n
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      // ⭐ Try to get error message from response
+      
       try {
         const errorData = await response.json();
         const errorMessage = errorData.message || errorData.error || `Error: ${response.status}`;

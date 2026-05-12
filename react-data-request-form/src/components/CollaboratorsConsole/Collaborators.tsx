@@ -21,8 +21,10 @@ const Collaborators: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  // ⭐ ADD THESE STATE VARIABLES
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tableSearchQuery, setTableSearchQuery] = useState("");
   const [pendingToggle, setPendingToggle] = useState<{
     index: string;
     currentStatus: boolean;
@@ -31,16 +33,38 @@ const Collaborators: React.FC = () => {
   } | null>(null);
   const currentUserEmail = auth.currentUser?.email || undefined;
   const filteredData = useMemo(() => {
-    if (roleFilter === "all") return data;
+    let result = data;
+
     if (roleFilter === "pi") {
-      const filtered = data.filter((c: any) => {
-        const isPI = c.role === "PI" || c.role === "Co-PI";
-        return isPI;
-    });
-      return filtered;
+      result = result.filter((c: any) => c.role === "PI" || c.role === "Co-PI");
+    } else if (roleFilter === "member") {
+      result = result.filter((c: any) => c.role === "Member");
     }
-    return data;
-  }, [data, roleFilter]);
+
+    if (tableSearchQuery.trim() !== "") {
+      const q = tableSearchQuery.toLowerCase();
+      result = result.filter((c: any) => {
+        const firstName = (c.first_name || "").toLowerCase();
+        const lastName = (c.last_name || "").toLowerCase();
+        const fullName = `${firstName} ${lastName}`;
+        const primaryEmail = (c.primary_email || "").toLowerCase();
+        const email = (c.email || "").toLowerCase();
+        const emailList = (c.email_list || []).map((e: string) =>
+          typeof e === "string" ? e.toLowerCase() : ""
+        );
+        return (
+          firstName.includes(q) ||
+          lastName.includes(q) ||
+          fullName.includes(q) ||
+          primaryEmail.includes(q) ||
+          email.includes(q) ||
+          emailList.some((e: string) => e.includes(q))
+        );
+      });
+    }
+
+    return result;
+  }, [data, roleFilter, tableSearchQuery]);
 
   const fetchCollaborators = async () => {
     if (!auth.currentUser) {
@@ -51,13 +75,9 @@ const Collaborators: React.FC = () => {
     const token = await getCurrentUserToken();
     try {
       const response = await ApiUtils.fetchCollaborators(token);
-      const sortedResponse = response.sort((a: any, b: any) => {
-        const indexA = parseInt(a.index) || 0;
-        const indexB = parseInt(b.index) || 0;
-        return indexB - indexA; // Descending order
-      });
       setIsDataLoading(false);
-      setData(sortedResponse);
+      setData(response);
+      fetchLastUpdated();
     } catch (error) {
       setIsDataLoading(false)
       console.error("Error fetching collaborators:", error);
@@ -123,22 +143,50 @@ const Collaborators: React.FC = () => {
     setSelectedData({});
     setAction("add");
   };
+  
+  const fetchLastUpdated = async () => {
+    const token = await getCurrentUserToken();
+    try {
+      const response = await ApiUtils.fetchLastUpdated(token);
+      setLastUpdated(response.last_updated);
+    } catch (error) {
+      console.error("Error fetching last updated:", error);
+    }
+  };
+
+  const formatLastUpdated = (isoString: string | null) => {
+    if (!isoString) return "Never";
+    
+    try {
+      const date = new Date(isoString);
+      const options: Intl.DateTimeFormatOptions = { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      return date.toLocaleDateString('en-CA', options);
+    } catch {
+      return "Invalid date";
+    }
+  };
 
   const handleUpdate = () => {
     fetchCollaborators();
     setSelectedData(null);
     setAction(null);
+    setSearchQuery("");
+    setTableSearchQuery("");
   };
 
   const handleBack = () => {
     setSelectedData(null);
     setAction(null);
+    setSearchQuery("");
+    setTableSearchQuery("");
   };
-  // ⭐ ADD THESE NEW FUNCTIONS
   const handleToggleClick = (collaborator: any) => {
     const isCurrentlyActive = collaborator.is_active === "true";
     
-    // Prevent self-deactivation
     if (collaborator.email === currentUserEmail && isCurrentlyActive) {
       alert("You cannot deactivate yourself");
       return;
@@ -226,7 +274,7 @@ const Collaborators: React.FC = () => {
           <div className="d-flex justify-content-between mb-3">
             <h2>Collaborators</h2>
             <div className="d-flex gap-2 align-items-center">
-            {/* ✅ Add filter dropdown (only for admins) */}
+            {/* Add filter dropdown (only for admins) */}
             {isAdmin && (
               <Form.Select
                 value={roleFilter}
@@ -235,6 +283,7 @@ const Collaborators: React.FC = () => {
               >
                 <option value="all">All Roles</option>
                 <option value="pi">PIs & Co-PIs Only</option>
+                <option value="member">Members Only</option>
               </Form.Select>
             )}
             {(isAdmin || userRole === "PI" || userRole === "Co-PI") && (
@@ -244,12 +293,22 @@ const Collaborators: React.FC = () => {
             )}
           </div>
         </div>
-          {/* ✅ Add SearchBar here (only for admins) */}
+          {/* Add SearchBar here (only for admins) */}
           {isAdmin && data && data.length > 0 && (
-            <SearchBar
-              collaborators={data}
-              onSelectCollaborator={handleSearchSelect}
-            />
+            <>
+              <SearchBar
+                collaborators={data}
+                onSelectCollaborator={handleSearchSelect}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                onSearch={(q) => setTableSearchQuery(q)}
+                onClear={() => setTableSearchQuery("")}
+              />
+              <div className="mt-2 mb-3" style={{ fontSize: '0.9rem', color: '#5b5757' }}>
+                <i className="bi bi-clock-history me-2"></i>
+                Last Updated: <strong>{formatLastUpdated(lastUpdated)}</strong>
+              </div>
+            </>
           )}
 
           {filteredData && filteredData.length > 0 ? (  
@@ -272,8 +331,8 @@ const Collaborators: React.FC = () => {
               }}
             onRowClick={handleRowClick}
             isAdmin={isAdmin}
-            onToggleActive={isAdmin ? handleToggleClick : undefined}  // ⭐ ADD THIS
-            currentUserEmail={currentUserEmail}  // ⭐ ADD THIS
+            onToggleActive={isAdmin ? handleToggleClick : undefined}  
+            currentUserEmail={currentUserEmail}
           />
           ) : (
             <div className="alert alert-info">
@@ -282,7 +341,6 @@ const Collaborators: React.FC = () => {
           )}
         </>
       )}
-      {/* ⭐ ADD THIS CONFIRMATION MODAL */}
       <Modal
         show={showConfirmModal}
         onHide={() => setShowConfirmModal(false)}

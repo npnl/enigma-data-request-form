@@ -38,8 +38,8 @@ const fetchRequests = async (token: string | null) => {
   return requests;
 };
 
-const submitRequest = async (data: DataRequestOut) => {
-  const response = await HttpClient.post<Response>("submit-request", data);
+const submitRequest = async (data: DataRequestOut, token: string | null) => {
+  const response = await HttpClient.post<Response>("submit-request", data, token);
   return response;
 };
 
@@ -55,34 +55,22 @@ const getData = async (data: DataRequestOut) => {
   return response;
 };
 
-//const fetchDataAndSummary = async (data: DataRequestOut, token: string | null) => {
-//  const response = await HttpClient.post<DataSummaries>("data-summary", data, token);
-//  return response;
-//};
-
-//const fetchDataAndSummaryByFilename = async (fileName: string, token: string | null) => {
-//  const response = await HttpClient.get<DataSummaries>(
-//    `data-summary/${fileName}`,
-//    token
-//  );
-//  return response;
-//};
-
-const fetchBooleanData = async () => {
-  const response = await HttpClient.get<DataFrame>("boolean-data");
+const fetchBooleanData = async (token: string | null) => {
+  const response = await HttpClient.get<DataFrame>("boolean-data", token);
   return response;
 };
 
-const getRowCount = async (filters: any) => {
+const getRowCount = async (filters: any, token: string | null) => {
   const response = await HttpClient.post<{
     success: boolean;
     count: number;
     total_sites: number;
     sessions_per_site: { [site: string]: number };
     message?: string;
-  }>("rows-count", filters);
+  }>("rows-count", filters, token);
   return response;
 };
+
 
 const fetchAuthorsData = async () => {
   const response = await HttpClient.get<AuthorsOptions>("get-authors-list");
@@ -300,6 +288,28 @@ const deleteProfilePicture = async (token: string | null, imageUrl: string) => {
   return response;
 };
 
+const fetchMembersByCohort = async (token: string | null) => {
+  const response = await HttpClient.get<{
+    [cohort: string]: Array<{
+      pi_name: string;
+      role: string;
+      members: Array<{ first_name: string; last_name: string; email: string, role: string}>;
+    }>;
+  }>(
+    "collaborators/members-by-cohort",
+    token
+  );
+  return response;
+};
+
+const fetchLastUpdated = async (token: string | null) => {
+  const response = await HttpClient.get<{ last_updated: string | null }>(
+    "collaborators/last-updated",
+    token
+  );
+  return response;
+};
+
 
 
 export default {
@@ -337,4 +347,6 @@ export default {
   fetchPIsByCohort,
   downloadCollaboratorsCSV,
   deleteProfilePicture,
+  fetchMembersByCohort,
+  fetchLastUpdated,
 };

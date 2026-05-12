@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { setSelected, setRequiredAndUpdateRowCount } from "../../redux/metricsSlice";
@@ -6,7 +6,6 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { updateRowCount, setOrGroups as setOrGroupsAction } from "../../redux/metricsSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { useEffect } from "react";
 
 interface MetricSummary {
   category: string;
@@ -37,7 +36,6 @@ const MetricsLogicSummary: React.FC<MetricsLogicSummaryProps> = ({
 }) => {
   const dispatch = useDispatch<AppDispatch>();
 
-  // Normalize partial metrics safely
   const normalizeMetric = (m: Partial<MetricSummary>): MetricSummary => ({
     category: m.category ?? "",
     subcategory: m.subcategory,
@@ -48,14 +46,12 @@ const MetricsLogicSummary: React.FC<MetricsLogicSummaryProps> = ({
     inOrGroup: m.inOrGroup ?? false,
   });
 
-  /** ---------- REMOVE HANDLERS ---------- **/
-  // Box 3: Optional → Unselect + Remove
+
   const handleRemoveFromOptional = (metric: MetricSummary) => {
     setOptionalMetrics((prev) =>
       prev.filter((m) => m.metricName !== metric.metricName)
     );
 
-    // Untoggle in UI
     dispatch(setSelected({
       category: metric.category,
       metricName: metric.metricName,
@@ -68,7 +64,6 @@ const MetricsLogicSummary: React.FC<MetricsLogicSummaryProps> = ({
     }));
   };
 
-  // Box 2: OR → Move back to Box 3
   const handleRemoveFromOrGroup = (metric: MetricSummary, groupIndex: number) => {
     const newGroups = orGroups
     .map((g, i) =>
@@ -88,7 +83,6 @@ const MetricsLogicSummary: React.FC<MetricsLogicSummaryProps> = ({
       dispatch(updateRowCount());
   };
 
-  // Box 1: Required → Move back to Box 3 (toggle off required)
   const handleRemoveFromRequired = (metric: MetricSummary) => {
     setRequiredMetrics((prev) =>
       prev.filter((m) => m.metricName !== metric.metricName)
@@ -107,12 +101,11 @@ const MetricsLogicSummary: React.FC<MetricsLogicSummaryProps> = ({
   };
 
   const handleAddOrGroup = () => {
-  // Avoid duplicates — only add if last group is not empty
   setOrGroups((prev) => {
     if (prev.length === 0 || prev[prev.length - 1].length > 0) {
       return [...prev, []];
     }
-    return prev; // prevent empty group stacking
+    return prev;
   });
 };
 
@@ -121,7 +114,6 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
   dispatch(updateRowCount());
 };
 
-  /** ---------- DRAG LOGIC ---------- **/
   const onDragEnd = (result: any) => {
     const { source, destination } = result;
     if (!destination) return;
@@ -148,8 +140,6 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
 
       setOrGroups(newGroups);
       syncOrGroupsToRedux(newGroups);
-      //dispatch(setOrGroupsAction(newGroups.map((g) => g.map((m) => m.metricName))));
-      //dispatch(updateRowCount());
     }
     if (!dragged) return;
     if (destBox.startsWith("or-") && dragged.is_required) {
@@ -246,13 +236,26 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
   ]).size;
 
   const viewMode = useSelector((state: RootState) => state.metrics.viewMode);
+  const savedOrGroupsRef = useRef<MetricSummary[][]>([]);
+
   useEffect(() => {
-  if (viewMode === "basic") {
-    setOrGroups([]); // clear local
-    dispatch(setOrGroupsAction([])); // clear Redux
-    dispatch(updateRowCount()); // refresh count (no OR logic)
-  }
-}, [viewMode]);
+    if (viewMode === "basic") {
+      if (orGroups.length > 0) {
+        savedOrGroupsRef.current = orGroups;
+      }
+      setOrGroups([]);
+      dispatch(setOrGroupsAction([]));
+      dispatch(updateRowCount());
+    } else if (viewMode === "advanced") {
+      if (savedOrGroupsRef.current.length > 0) {
+        const restored = savedOrGroupsRef.current;
+        savedOrGroupsRef.current = [];
+        setOrGroups(restored);
+        dispatch(setOrGroupsAction(restored.map((g) => g.map((m) => m.metricName))));
+        dispatch(updateRowCount());
+      }
+    }
+  }, [viewMode]);
 
   return (
   <div className="metrics-logic-summary mt-4">
@@ -338,7 +341,6 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
         </Droppable>
       </section>
 
-      {/* ---------- Box 2 – OR GROUPS ---------- */}
       <section className="metrics-section">
         {viewMode === "advanced" && (
         <div className="metrics-box or-container">
@@ -368,11 +370,9 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
                               marginTop: "-4px",
                             }}
                           onClick={() => {
-                            // Remove all metrics from this OR group
                             const newGroups = orGroups.filter((_, idx) => idx !== i);
                             setOrGroups(newGroups);
                           
-                            // Move metrics back to optional
                             group.forEach((m) => {
                               setOptionalMetrics((prev) =>
                                 prev.some((opt) => opt.metricName === m.metricName)
@@ -393,7 +393,6 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
                       {group.length === 0 && (
                         <button
                           onClick={() => {
-                            // Remove this empty OR group
                             const newGroups = orGroups.filter((_, idx) => idx !== i);
                             setOrGroups(newGroups);
                             dispatch(
@@ -461,7 +460,6 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
         )}
       </section>
 
-      {/* ---------- Box 3 – OPTIONAL ---------- */}
       <section className="metrics-section">
         <Droppable droppableId="optional" direction="horizontal">
           {(provided) => (
@@ -477,7 +475,6 @@ const syncOrGroupsToRedux = (groups: MetricSummary[][]) => {
                   <button
                     className="btn btn-sm btn-outline-danger"
                     onClick={() => {
-                      // Remove all optional metrics
                       optionalMetrics.forEach((m) => {
                         dispatch(setSelected({
                           category: m.category,

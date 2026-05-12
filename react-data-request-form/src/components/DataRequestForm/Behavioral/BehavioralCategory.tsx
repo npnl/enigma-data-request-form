@@ -48,14 +48,6 @@ interface BehavioralMetricSectionProps {
 const BehavioralMetricCategory: React.FC<BehavioralMetricSectionProps> = ({ 
   category, metrics, openCategories, openSubcategories, setOpenCategories, setOpenSubcategories, highlightedMetric}) => {
   const dispatch = useDispatch()
-  //const allMetrics = Object.values(metrics).flat()
-  //const metricsData = useSelector((state: RootState) => state.metrics.behavioralMetrics[category])
-  //const isAllSelected = allMetrics.every((m) => m.is_selected)
-  //const isAllRequired = allMetrics.every((m) => m.is_required)
-  //const [isOpen, setIsOpen] = useState(false);
-  //const [openSubcategories, setOpenSubcategories] = useState<{
-  //  [key: string]: boolean;
-  //}>({});
   const isOpen = openCategories[category] || false;
   const allMetrics = Object.values(metrics).flat();
   const selectedCount = allMetrics.filter((m) => m.is_selected).length;
@@ -64,7 +56,6 @@ const BehavioralMetricCategory: React.FC<BehavioralMetricSectionProps> = ({
     const isCurrentlyOpen = !!prevCategories[category];
     const newCategories = { ...prevCategories, [category]: !isCurrentlyOpen };
 
-    // If collapsing → close all its subcategories
     if (isCurrentlyOpen) {
       setOpenSubcategories((prevSubs) => {
         const updatedSubs = { ...prevSubs };
@@ -88,15 +79,6 @@ const toggleSubcategory = (subcategory: string) => {
   }));
 };
 
-  
-/*
-  const toggleOpen = () => setIsOpen(!isOpen);
-  const toggleSubcategory = (subcategory: string) => {
-    setOpenSubcategories((prev) => ({
-      ...prev,
-      [subcategory]: !prev[subcategory],
-    }));
-  }; */
 
   const handleSelectAll = (subcategory: string) => {
     const subMetrics =metrics[subcategory];
@@ -104,12 +86,9 @@ const toggleSubcategory = (subcategory: string) => {
     if (allSelected) {
       dispatch(resetSelectedAll({ category, subcategory }));
       dispatch(resetRequiredAll({ category, subcategory }));
-      //dispatch(setSelectedAll({category}))
     }
     else {
       dispatch(setSelectedAll({ category, subcategory }));
-      //dispatch(resetSelectedAll({category}))
-      //dispatch(resetRequiredAll({category}))
     }
   };
 
@@ -117,53 +96,13 @@ const toggleSubcategory = (subcategory: string) => {
     const subMetrics =metrics[subcategory];
     const allRequired = subMetrics.every((m) => m.is_required);
     if(allRequired){
-      //dispatch(setRequiredAll({category}))
       dispatch(resetRequiredAll({ category, subcategory }));
     }
     else {
       dispatch(setRequiredAll({ category, subcategory }));
-      //dispatch(resetRequiredAll({category}))
     }
   };
   const viewMode = useSelector((state: RootState) => state.metrics.viewMode);
-/*
-  return (
-    <StyledCard>
-      <Card.Body>
-        <CardHeader onClick={toggleOpen}>
-          <div className='d-flex'>
-        <FontAwesomeIcon style={{cursor: 'pointer'}} onClick={toggleOpen} icon={isOpen ? faCircleChevronDown : faCircleChevronRight} className="float-left pt-1 mr-2" />
-        <CardTitle>{category}</CardTitle>
-        </div>
-        </CardHeader>
-        {isOpen && (
-          <>
-          <div className="col-12 d-flex justify-content-start ml-1 mt-2">
-            <div className='mr-2'>
-              <StyleCheckbox type="checkbox" className="form-check-input" id={`select_all_${category}`} onChange={handleSelectAll} checked={isAllSelected}/>
-              <StyledLabel htmlFor={`select_all_${category}`}>Select All</StyledLabel>
-            </div>
-            {isAllSelected && <div>
-              <StyleCheckbox type="checkbox" className="form-check-input" id={`all_required_${category}`} onChange={handleRequiredAll} checked={isAllRequired} />
-              <StyledLabel htmlFor={`all_required_${category}`}>Make all required</StyledLabel>
-            </div>}
-          </div>
-            <div className="metrics-list row">
-              {metrics.map((metric) => (
-                <BehavioralMetricInput
-                  key={metric.metric_name}
-                  category={category}
-                  metricName={metric.metric_name}
-                  description={metric.description}
-                  type={metric.variable_type}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </Card.Body>
-    </StyledCard>
-  );*/
   return (
     <StyledCard>
       <Card.Body>

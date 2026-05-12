@@ -3,11 +3,7 @@ import { Container, Spinner } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useAppDispatch } from "../hooks";
-import {
-  //fetchDataAndSummaryByFilename,
-  fetchFormSummary,
-  setFilename,
-} from "../redux/requestsSlice";
+import { fetchFormSummary, setFilename } from "../redux/requestsSlice";
 import { RootState } from "../redux/store";
 import { DataSummary } from "./RequestSummary/DataSummaries";
 import DataTable from "./RequestSummary/DataTable";
@@ -27,7 +23,6 @@ const DataView: React.FC = ({}) => {
         if (fileNameParam && fileName != fileNameParam) {
           dispatch(setFilename(fileNameParam));
           dispatch(fetchFormSummary(fileNameParam));
-          //dispatch(fetchDataAndSummaryByFilename(fileNameParam));
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -47,8 +42,6 @@ const DataView: React.FC = ({}) => {
       </Container>
     );
   }
-
-  console.log(dataSummary);
   return (
     <>
       {dataSummary?.data && (

@@ -16,7 +16,6 @@ const CollaboratorsHome: React.FC = () => {
 
   return (
     <div>
-      {/* Always render Collaborators component for ALL users (Admin, PI, Member) */}
       <Collaborators />
     </div>
   );

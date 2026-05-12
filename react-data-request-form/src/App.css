@@ -174,7 +174,7 @@
   }
 }
 
-/* Custom scrollbar for dropdown */
+
 .search-dropdown::-webkit-scrollbar {
   width: 6px;
 }
@@ -193,7 +193,7 @@
   background: #555;
 }
 
-/* Modern Login Modal Styles */
+
 .login-modal .modal-content {
   border: none;
   border-radius: 16px;

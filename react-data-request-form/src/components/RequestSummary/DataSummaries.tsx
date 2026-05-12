@@ -33,7 +33,6 @@ export const DataSummary: React.FC<DataSummaryProps> = ({
   return (
     <Container>
       <h2 className="mt-3 mb-3">Data Summary</h2>
-      {/* <DataTable dataFrame={data.data} title="Data Summary" /> */}
       <div className="row">
         <div className="col d-flex justify-content-center">
           <CustomDataTable

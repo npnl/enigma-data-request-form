@@ -22,8 +22,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
-    
-    // Clear errors when user starts typing
     setEmailError(null);
     setError(null);
   };
@@ -31,7 +29,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate email
     if (!email.trim()) {
       setEmailError("Please enter your email address");
       return;
@@ -57,7 +54,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
   };
 
   const handleClose = () => {
-    // Reset state when closing
     setEmail("");
     setEmailSent(false);
     setError(null);
@@ -82,7 +78,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
               Check Your Email
             </div>
           ) : (
-            "Sign in to NPNL ENIGMA Portal"
+            "Sign in to ENIGMA Portal"
           )}
         </Modal.Title>
       </Modal.Header>
@@ -101,16 +97,25 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
             <p className="mb-3">
               We've sent a sign-in link to:
             </p>
-            <p className="fw-bold text-primary mb-3">{email}</p>
+            <p className="fw-bold text-dark mb-3">{email}</p>
             <p className="text-muted small mb-4">
-              Click the link in the email to complete sign-in. The link will expire in 1 hour.
+              Click the link in the email to complete your sign-in. The link will expire in 1 hour. You can close this window.
             </p>
-            <Button variant="primary" onClick={handleClose} className="px-4">
+            <p className="text-muted small mb-4">
+              <strong>Can't find the email?</strong> Make sure to check your <strong>spam</strong> folder!
+            </p>
+            <Button onClick={handleClose} className="px-4" style={{
+                fontSize: "1.1rem",
+                fontWeight: "600",
+                background: "#e9ecef",
+                border: "1px solid #adb5bd",
+                color: "#212529"
+              }}>
               Got it!
             </Button>
           </div>
         ) : (
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} noValidate>
             <p className="text-muted text-center mb-4">
               Enter your email address and we'll send you a secure sign-in link.
             </p>
@@ -125,7 +130,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
               <Form.Label className="fw-semibold">Email Address</Form.Label>
               <Form.Control
                 type="email"
-                placeholder="your.email@example.com"
                 value={email}
                 onChange={handleEmailChange}
                 disabled={loading}
@@ -146,10 +150,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
 
             <div className="d-grid gap-2">
               <Button 
-                variant="primary" 
                 type="submit"
                 disabled={loading || !email.trim()}
                 size="lg"
+                style={{
+                  fontSize: "1.1rem",
+                  fontWeight: "600",
+                  background: "#e9ecef",
+                  border: "1px solid #adb5bd",
+                  color: "#212529"
+                }}
               >
                 {loading ? (
                   <>
@@ -159,14 +169,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onHide }) => {
                 ) : (
                   <>
                     <i className="bi bi-envelope me-2"></i>
-                    Send Login Link
+                    Send Sign-in Link
                   </>
                 )}
               </Button>
               <Button 
-                variant="outline-secondary" 
                 onClick={handleClose}
                 disabled={loading}
+                style={{
+                  fontSize: "1.1rem",
+                  fontWeight: "600",
+                  background: "#e9ecef",
+                  border: "1px solid #adb5bd",
+                  color: "#212529"
+                }}
               >
                 Cancel
               </Button>

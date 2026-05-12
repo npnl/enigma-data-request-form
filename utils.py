@@ -62,10 +62,6 @@ col_mapping = {
 
 class BooleanData:
     _data = None
-    # try:
-    #     data = pd.read_csv('static/data/all_data_boolean_subj_with_ses.csv')
-    # except:
-    #     data = pd.DataFrame([])
 
     @classmethod
     def _get_data(cls, path):
@@ -75,7 +71,7 @@ class BooleanData:
 
     @classmethod
     def removeNullRows(cls, cols):
-        return cls.data.dropna(subset=cols)
+        return cls._data.dropna(subset=cols)
 
     @classmethod
     def getData(cls, staticPath):
@@ -84,45 +80,30 @@ class BooleanData:
     @classmethod
     def applyFiltersAndGetCount(cls, staticPath, required_cols, session="baseline", or_groups=None):
         try:
-            data = cls._get_data(staticPath)  # your existing data loader
+            data = cls._get_data(staticPath).copy()
             if data is None or data.empty:
-                return 0
-
-            # Build list of relevant columns (for NA handling)
-            all_relevant_cols = required_cols.copy()
-            if or_groups:
-                for group in or_groups:
-                    all_relevant_cols.extend(group)
-
-            data = data.dropna(subset=all_relevant_cols, how="any")
+                return pd.DataFrame([])
 
             for col in required_cols:
                 if col in data.columns:
-                    data = data[data[col] == 1]
+                    data = data[(data[col] == 1)]
 
             if or_groups:
                 for group in or_groups:
                     valid_cols = [c for c in group if c in data.columns]
                     if not valid_cols:
                         continue
-                    # Keep rows where at least one metric in the group == 1
-                    group_mask = data[valid_cols].any(axis=1)
+                    group_mask = (data[valid_cols] == 1).any(axis=1)
                     data = data[group_mask]
 
             if session == "baseline":
                 filtered = data[data["SES"] == "ses-1"]
             else:
-                '''
-                filtered = data[data["SES"].isin(["ses-1", "ses-2"])]
-                valid_bids_ids = filtered.groupby("BIDS_ID")["SES"].apply(
-                    lambda x: {"ses-1", "ses-2"}.issubset(set(x))
-                )
-                '''
                 filtered = data[data["SES"].astype(str).str.startswith("ses-")]
                 valid_bids_ids = (filtered.groupby("BIDS_ID")["SES"].nunique().ge(2))
                 filtered = filtered[filtered["BIDS_ID"].isin(valid_bids_ids[valid_bids_ids].index)]
 
-            return filtered
+            return filtered.drop_duplicates(subset=["BIDS_ID", "SES"])
 
         except Exception as e:
             print("Error filtering rows:", e)
@@ -139,7 +120,7 @@ def get_data(behavior_filters):
     cols_of_interest = list(cols_of_interest)
     req_not_null = [key for key, value in behavior_filters.items() if value["required"]]
     files = glob.glob(
-        f"{working_dir}/faculty/sliew/enigma/new/BIDS/derivatives/master_db/master_ENIGMA_db_2024_10_11.csv"
+        f"{working_dir}/faculty/sliew/enigma/new/BIDS/derivatives/master_db/master_ENIGMA_db_2025_12_12.csv"
     )
     all_df = pd.DataFrame([])
     for file in sorted(files):
@@ -190,199 +171,18 @@ def get_data(behavior_filters):
     return all_df
 
 
-def filter_imaging_data(imaging_filters, all_df):
-    if not len(all_df):
-        return all_df
-    for i, row in all_df.iterrows():
-        if (
-            pd.isnull(row["BIDS_ID"])
-            or pd.isna(row["BIDS_ID"])
-            or pd.isnull(row["SES"])
-        ):
-            continue
-        sub = row["BIDS_ID"]
-        ses = row["SES"]
-        site = sub[4:8].upper()
-        path = f"{working_dir}/faculty/sliew/enigma/new/BIDS/{site}/{sub}/{ses}/"
-        lesion_path = f"{working_dir}/faculty/sliew/enigma/new/BIDS/derivatives/lesion_raw/{site}/{sub}/{ses}/anat/"
-        lesion_preproc = f"{working_dir}/faculty/sliew/enigma/new/BIDS/derivatives/lesion_preproc/{site}/{sub}/{ses}/anat/"
-
-        T1 = path + "/anat/" + sub + "_" + ses + "_T1w.nii.gz"
-        T2 = path + "/anat/" + sub + "_" + ses + "_T2w.nii.gz"
-        DWI = path + "/dwi/" + sub + "_" + ses + "_dwi.nii.gz"
-        FLAIR = path + "/anat/" + sub + "_" + ses + "_FLAIR.nii.gz"
-        lesion = lesion_path + "*T1lesion_mask.nii.gz"
-        MNI_T1 = lesion_preproc + "*T1FinalResampledNorm.nii.gz"
-        MNI_mask = lesion_preproc + "*T1lesion_mask.nii.gz"
-        if "T1" in imaging_filters:
-            T1_files = glob.glob(T1)
-            T1_exists = T1_files[0] if T1_files else 0
-            all_df.at[i, "T1_in_BIDS"] = T1_exists
-        if "T2" in imaging_filters:
-            T2_files = glob.glob(T2)
-            T2_exists = T2_files[0] if T2_files else 0
-            all_df.at[i, "T2_in_BIDS"] = T2_exists
-        if "DWI" in imaging_filters:
-            DWI_files = glob.glob(DWI)
-            DWI_exists = DWI_files[0] if DWI_files else 0
-            all_df.at[i, "DWI_in_BIDS"] = DWI_exists
-        if "FLAIR" in imaging_filters:
-            FLAIR_files = glob.glob(FLAIR)
-            FLAIR_exists = FLAIR_files[0] if FLAIR_files else 0
-            all_df.at[i, "FLAIR_in_BIDS"] = FLAIR_exists
-        if "Raw_Lesion" in imaging_filters:
-            lesion_files = glob.glob(lesion)
-            lesion_exists = lesion_files[0] if lesion_files else 0
-            all_df.at[i, "Lesion_Raw"] = lesion_exists
-        if "MNI_T1" in imaging_filters:
-            MNI_T1_files = glob.glob(MNI_T1)
-            MNI_T1_exists = MNI_T1_files[0] if MNI_T1_files else 0
-            all_df.at[i, "MNI_T1_in_BIDS"] = MNI_T1_exists
-        if "MNI_Lesion_mask" in imaging_filters:
-            MNI_mask_files = glob.glob(MNI_mask)
-            MNI_mask_exists = MNI_mask_files[0] if MNI_mask_files else 0
-            all_df.at[i, "MNI_mask_in_BIDS"] = MNI_mask_exists
-
-    for key, value in imaging_filters.items():
-        if value["required"]:
-            all_df = all_df.loc[all_df[col_mapping[key]] != 0]
-    return all_df
-
-
 def get_site(val):
     if pd.isnull(val):
         return val
     return val[4:8].upper()
-
-'''
-def get_precomputed_data(timepoint, behavioralFilters, imagingFilters):
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(project_root, "static/anonymized_data/anonymized_data.csv")
-    all_df = pd.read_csv(
-        data_path
-    )
-    required_behavioral_metrics = [
-        key for key, value in behavioralFilters.items() if value["required"]
-    ]
-    behavioral_metrics = ["BIDS_ID", "SES", "AGE", "SEX", "SITE"] + list(
-        col_mapping.values()
-    )
-    for key in behavioralFilters.keys():
-        if key not in behavioral_metrics:
-            behavioral_metrics.append(key)
-    all_df = all_df[behavioral_metrics]
-    all_df = all_df.dropna(subset=required_behavioral_metrics)
-
-    for key, value in behavioralFilters.items():
-        if value["required"]:
-            min_val = None
-            max_val = None
-
-            if (
-                "value1" in value
-                and value["value1"]
-                and value["type"] in ["int", "float"]
-            ):
-                min_val = (
-                    int(value["value1"])
-                    if value["type"] == "int"
-                    else float(value["value1"])
-                )
-            if (
-                "value2" in value
-                and value["value2"]
-                and value["type"] in ["int", "float"]
-            ):
-                max_val = (
-                    int(value["value2"])
-                    if value["type"] == "int"
-                    else float(value["value2"])
-                )
-
-            if value["type"] == "string":
-                if value["value1"]:
-                    all_df = all_df.loc[all_df[key] == value["value1"]]
-                else:
-                    all_df = all_df.dropna(subset=key)
-            elif value["type"] in ["int", "float"]:
-                if min_val is not None and max_val is not None:
-                    all_df = all_df.loc[
-                        (all_df[key] >= min_val) & (all_df[key] <= max_val)
-                    ]
-                elif min_val is not None:
-                    all_df = all_df.loc[all_df[key] >= min_val]
-                elif max_val is not None:
-                    all_df = all_df.loc[all_df[key] <= max_val]
-            else:
-                print(f"Invalid filter type for {key}: {value['type']}")
-
-    imaging_cols_to_drop = [
-        col for key, col in col_mapping.items() if key not in imagingFilters
-    ]
-    all_df = all_df.drop(columns=imaging_cols_to_drop)
-    for key, value in imagingFilters.items():
-        all_df[col_mapping[key]] = all_df[col_mapping[key]].replace(
-            ["0", "0.0"], np.nan
-        )
-        if value["required"]:
-            all_df = all_df.loc[all_df[col_mapping[key]].notna()]
-
-    if timepoint == "baseline":
-        all_df = all_df[all_df["SES"] == "ses-1"]
-    else:
-        filtered_df = all_df[all_df["SES"].isin(["ses-1", "ses-2"])]
-        valid_bids_ids = filtered_df.groupby("BIDS_ID")["SES"].apply(
-            lambda x: set(["ses-1", "ses-2"]).issubset(set(x))
-        )
-        all_df = filtered_df[
-            filtered_df["BIDS_ID"].isin(valid_bids_ids[valid_bids_ids].index)
-        ]
-    return all_df
-'''
-
-'''
-def fetch_data(request, download=False):
-    timepoint = request["timepoint"] if "timepoint" in request else "multi"
-    imaging_lst = request["imaging"]
-    behavior_lst = request["behavior"]
-    try:
-        # result = get_data(behavior_lst)
-        # result = filter_imaging_data(imaging_lst, result)
-        result = get_precomputed_data(timepoint, behavior_lst, imaging_lst)
-        result.reset_index(inplace=True)
-        if "index" in result.columns:
-            result.drop(columns="index", inplace=True)
-        if len(result) > 0:
-            if download:
-                return {"success": True, "data": result.to_csv(index=False)}
-            return {"success": True, "data": result.to_json(orient="records")}
-        else:
-            return {"success": True}
-    except Exception as e:
-        print("An error occurred: ", str(e))
-        return {"success": False}
-'''
 
 def fetch_bool_data():
     with open(os.path.join(os.getcwd(), "boolean_data.json"), "r") as f:
         boolean_data = json.load(f)
         return {"success": True, "data": boolean_data}
 
-'''
-def get_filtered_rows_count(staticPath, filters):
-    timepoint = filters["timepoint"] if "timepoint" in filters else "baseline"
-    all_filters = filters["behavioral"] + [
-        col_mapping[col] for col in filters["imaging"]
-    ]
-    count = BooleanData.applyFiltersAndGetCount(staticPath, all_filters, timepoint)
-    return {"success": True, "count": count}
-'''
 
 def get_filtered_rows_count(staticPath, filters):
-    """
-    Calculate row count after applying AND filters for required metrics
-    and OR logic within each OR group.
-    """
     try:
         timepoint = filters.get("timepoint", "baseline")
         required_metrics = filters.get("required_metrics", [])
@@ -398,45 +198,16 @@ def get_filtered_rows_count(staticPath, filters):
             return {"success": True, "count": 0, "total_sites": 0, "sessions_per_site": {}}
         total_count = len(count)
         total_sites = count['SITE'].nunique() if 'SITE' in count.columns else 0
-        # Sessions per site
         sessions_per_site = {}
         if 'SITE' in count.columns:
             sessions_per_site = count.groupby('SITE').size().to_dict()
-            # Sort by site name
             sessions_per_site = dict(sorted(sessions_per_site.items()))
         return {"success": True, "count": total_count, "total_sites": total_sites, "sessions_per_site": sessions_per_site}
         
     except Exception as e:
         print("Error in get_filtered_rows_count:", e)
         return {"success": False, "message": str(e)}
-'''
-def send_email(recipient):
-    smtp_server = "email-smtp.us-east-1.amazonaws.com"
-    port = 587  # TLS Port
-    sender = "npnlusc@gmail.com"
-    subject = "Hello from Amazon SES"
-    body = "Hello, this is a test email sent from Amazon SES"
-    msg = MIMEMultipart()
-    msg["From"] = sender
-    msg["To"] = recipient
-    msg["Subject"] = subject
 
-    msg.attach(MIMEText(body, "plain"))
-
-    try:
-        # Create server object with SSL option
-        server = smtplib.SMTP(smtp_server, port, timeout=10)
-        server.starttls()
-        server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(sender, recipient, text)
-        server.quit()
-        print("Email sent successfully!")
-        return True
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-        return False
-'''
 def send_email(recipient, subject=None, body=None):
     smtp_server = "email-smtp.us-east-1.amazonaws.com"
     port = 587
@@ -462,11 +233,9 @@ def send_email(recipient, subject=None, body=None):
         return False
 
 def upload_file_to_s3(file_name, content, object_name=None):
-    # If S3 object_name was not specified, use file_name
     if object_name is None:
         object_name = file_name
 
-    # Upload the file
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=PROD_ACCESS_KEY,
@@ -497,7 +266,7 @@ def add_data_request(data):
             "status": "pending",
         }
 
-        json_string = json.dumps(dataRequest).encode("utf-8")
+        json_string = json.dumps(dataRequest, indent=2).encode("utf-8")
 
         success, message = upload_file_to_s3(fileName, json_string)
         return {"success": success, "message": message, "filename": fileName}
@@ -614,35 +383,11 @@ def get_behavioral_data_summary(result):
 
 
 def validate_data(df):
-    # Replace NaNs with None (which converts to null in JSON)
     df = df.where(pd.notnull(df), None)
     return (
         df.astype(str).replace("nan", "").replace("None", "").to_dict(orient="records")
     )
-'''
-def get_summarized_data(request):
-    timepoint = request["timepoint"] if "timepoint" in request else "multi"
-    imaging_lst = request["imaging"]
-    behavior_lst = request["behavior"]
-    try:
-        # result = get_data(behavior_lst)
-        # result = filter_imaging_data(imaging_lst, result)
-        result = get_precomputed_data(timepoint, behavior_lst, imaging_lst)
-        imagingDataBySite = get_imaging_data_summary(result, imaging_lst)
-        columnsSummary = get_behavioral_data_summary(result)
-        recordsBySite = get_records_by_site(result)
-        result.reset_index(inplace=True)
-        if "index" in result.columns:
-            result.drop(columns="index", inplace=True)
-        response = {}
-        response["data"] = validate_data(result)
-        response["imagingDataBySite"] = validate_data(imagingDataBySite)
-        response["columnsSummary"] = validate_data(columnsSummary)
-        response["recordsBySite"] = validate_data(recordsBySite)
-        return response
-    except Exception as e:
-        print("An error occurred: ", str(e))
-'''
+
 
 def get_unique_sites(data):
     data = data.dropna()

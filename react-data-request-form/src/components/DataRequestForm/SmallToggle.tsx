@@ -1,5 +1,5 @@
 import React from "react";
-import { Switch, FormControlLabel, Box, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 interface SmallToggleProps {
   leftLabel: string;
@@ -11,30 +11,29 @@ interface SmallToggleProps {
 
 const SmallToggle: React.FC<SmallToggleProps> = ({ 
     leftLabel, rightLabel, checked, onChange, inline = false }) => {
+        const containerStyle = {
+            display: "flex",
+            backgroundColor: "#ebebeb",
+            borderRadius: "12px",
+            padding: "2px",
+            gap: "2px",
+            width: "fit-content",
+        };
         const buttonStyle = (isActive: boolean) => ({
-            flex: 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            textAlign: "center" as const,
-            padding: "2px 6px",
-            border: "1px solid #ccc",
-            backgroundColor: isActive ? "#2573e7dc" : "#f8f9fa",
-            color: isActive ? "#fff" : "#333",
+            padding: "3px 10px",
+            borderRadius: "9px",
+            backgroundColor: isActive ? "#ffffff" : "transparent",
+            color: isActive ? "#000000" : "#888888",
             fontWeight: isActive ? 600 : 400,
             cursor: "pointer",
             transition: "all 0.2s ease-in-out",
-            fontSize: "0.85rem",
-            lineHeight: 1.2,
+            fontSize: "0.75rem",
             whiteSpace: "nowrap" as const,
-        })
-        const groupStyle = {
-            display: "flex",
-            borderRadius: "6px",
-            overflow: "hidden",
-            border: "1px solid #ccc",
-            width: "fit-content",
-        };
+            boxShadow: isActive ? "0 1px 4px rgba(0,0,0,0.15)" : "none",
+        });
         return (
             <Box
             display={inline ? "inline-flex" : "flex"}
@@ -43,7 +42,7 @@ const SmallToggle: React.FC<SmallToggleProps> = ({
                 ...(inline ? { marginLeft: "0.75rem" } : { marginTop: "0.5rem" }),
             }}
             >
-            <Box sx={groupStyle}>
+            <Box sx={containerStyle}>
                 <Box
                 sx={{
                     ...buttonStyle(!checked),
@@ -55,7 +54,7 @@ const SmallToggle: React.FC<SmallToggleProps> = ({
                     } as React.ChangeEvent<HTMLInputElement>)
                 }
                 >
-                <Typography variant="body2">{leftLabel}</Typography>
+                <Typography variant="body2" fontWeight="inherit">{leftLabel}</Typography>
                 </Box>
                 <Box
                 sx={buttonStyle(checked)}
@@ -65,7 +64,7 @@ const SmallToggle: React.FC<SmallToggleProps> = ({
                     } as React.ChangeEvent<HTMLInputElement>)
                 }
                 >
-                <Typography variant="body2">{rightLabel}</Typography>
+                <Typography variant="body2" fontWeight="inherit">{rightLabel}</Typography>
                 </Box>
             </Box>
             </Box>

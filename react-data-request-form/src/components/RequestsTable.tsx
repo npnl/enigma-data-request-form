@@ -1,28 +1,16 @@
-import React, { useEffect, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-} from "@mui/material";
+import { useEffect, useState } from "react";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DataRequestIn } from "../types/DataRequest";
 import ApiUtils from "../api/ApiUtils";
 import { getCurrentUserToken } from "../services/authService";
-import { useSelector } from "react-redux";
-import { RootState } from "../redux/store";
+
 
 const RequestsTable = () => {
   const [files, setFiles] = useState<DataRequestIn[]>([]);
   const navigate = useNavigate();
-  //const { isAdmin } = useSelector((state: RootState) => state.dataRequestAuth);
   const userAuth = JSON.parse(localStorage.getItem("userAuth") || "{}");
   const isAdminFromStorage = userAuth.is_admin || false;
-  const [isAdmin, setIsAdmin] = useState<boolean>(isAdminFromStorage);
   useEffect(() => {
     if (!isAdminFromStorage) {
       navigate("/request-form");
@@ -36,11 +24,11 @@ const RequestsTable = () => {
           setFiles(requests);
         } else {
           console.log("No data returned from fetchRequests");
-          setFiles([]); // Set to empty array to ensure consistent data type
+          setFiles([]); 
         }
       } catch (error) {
         console.error("Failed to fetch requests:", error);
-        setFiles([]); // Set to empty array on error
+        setFiles([]);
       }
     };
     loadData();
@@ -51,7 +39,7 @@ const RequestsTable = () => {
     navigate(`/request-summary/${fileName}`);
   };
   if (!isAdminFromStorage) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (
@@ -64,7 +52,7 @@ const RequestsTable = () => {
             <TableCell>Email</TableCell>
             <TableCell>Time</TableCell>
             <TableCell>File Name</TableCell>
-            <TableCell>Status</TableCell>
+            <TableCell>Secondary Proposal Status</TableCell>
             <TableCell>Action</TableCell>
           </TableRow>
         </TableHead>
@@ -76,7 +64,7 @@ const RequestsTable = () => {
                 <TableCell>{file.email ?? ""}</TableCell>
                 <TableCell>{file?.time?.toString() ?? ""}</TableCell>
                 <TableCell>{file.file_name ?? ""}</TableCell>
-                <TableCell>{file.status ?? ""}</TableCell>
+                <TableCell>{file.data.proposal_status || "No status provided"}</TableCell>
                 <TableCell>
                   <Button
                     variant="contained"

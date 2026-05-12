@@ -4,7 +4,7 @@ import { RootState } from '../../../redux/store';
 import ImagingMetricSection from './ImagingCategory';
 import { useAppDispatch } from "../../../hooks";
 import { setSpaceMode } from "../../../redux/metricsSlice";
-import { Switch, FormControlLabel, Box } from "@mui/material";
+import { Box } from "@mui/material";
 import SmallToggle from "../SmallToggle";
 
 interface ImagingMetricContainerProps {
@@ -33,7 +33,7 @@ const ImagingMetricContainer: React.FC<ImagingMetricContainerProps> = ({openCate
   }
   return (
     <div className="metrics-dashboard mt-4">
-      <Box display="flex" alignItems="center" justifyContent="flex-start" gap={2}  mb={2}>
+      <Box display="flex" alignItems="center" justifyContent="flex-start" gap={1}  mb={2}>
       <h2 style={{ marginBottom: 0 }}>Imaging</h2>
       <SmallToggle
         leftLabel="Native Space"
@@ -47,10 +47,8 @@ const ImagingMetricContainer: React.FC<ImagingMetricContainerProps> = ({openCate
         const filteredSubcategories = Object.fromEntries(
           Object.entries(metricsData[category]).map(([subcategory, metrics]) => {
             const filteredMetrics = metrics.filter((m: any) => {
-              //if (!m.show) return false;
 
               if (viewMode === "basic" && !m.essential) return false;
-              //if (viewMode === "advanced" && m.essential) return false;
 
               if (spaceMode === "native" && m.space !== "native" && m.space !== null)
                 return false;
@@ -63,7 +61,6 @@ const ImagingMetricContainer: React.FC<ImagingMetricContainerProps> = ({openCate
           }) .filter(([_, metrics]) => metrics.length > 0)
         );
 
-        // Skip category if no metrics left after filtering
         const hasAnyMetrics = Object.values(filteredSubcategories).some(
           (arr: any) => arr.length > 0
         );

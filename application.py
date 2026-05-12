@@ -8,15 +8,13 @@ from flask import (
     url_for,
     Response,
 )
-from flask_cors import CORS, cross_origin  # Import CORS
+from flask_cors import CORS, cross_origin
 import json, os
 from utils import (
-    #fetch_data,
     get_filtered_rows_count,
     add_data_request,
     get_request_data_from_storage,
     get_requests,
-    #get_summarized_data,
     send_email,
     get_boolean_data_from_file,
     get_authors_list,
@@ -41,6 +39,7 @@ CORS(application)
 
 @application.route("/config", methods=["GET"])
 @cross_origin()
+@collaborators_utils.authenticate
 def get_config():
     return jsonify({"mode": app_mode}), 200
 
@@ -105,6 +104,7 @@ def check_authorization():
 
 @application.route("/rows-count", methods=["POST", "OPTIONS"])
 @cross_origin()
+@collaborators_utils.authenticate
 def get_rows_count():
     if request.method == "OPTIONS":
         return _build_cors_preflight_response()
@@ -123,28 +123,24 @@ def get_rows_count():
 
 @application.route("/boolean-data", methods=["GET", "OPTIONS"])
 @cross_origin()
+@collaborators_utils.authenticate
 def get_boolean_data():
     if request.method == "OPTIONS":
-        # Specific handling for preflight request if needed
         return _build_cors_preflight_response()
     staticPath = application.static_folder
     result = get_boolean_data_from_file(staticPath)
     return result
-#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-#METRICS_FILE = os.path.join(BASE_DIR, "metric-scripts", "metrics_data.json")
+
 
 @application.route("/metrics", methods=["GET", "OPTIONS"])
 @cross_origin()
+@collaborators_utils.authenticate
 def get_metrics():
-    #file_path = application.static_folder + "/anonymized_data/metrics_data.json"
-    #print("Reading metrics from:", file_path)
     if request.method == "OPTIONS":
         return _build_cors_preflight_response()
     try:
         with open(application.static_folder + "/anonymized_data/metrics_data.json", "r") as file:
-        #with open(METRICS_FILE, "r") as file:
             all_metrics = json.loads(file.read())
-            #behavioral_data = json.loads(file.read())
             behavioral_data = {}
             imaging_data = {}
             for category, subcategories in all_metrics.items():
@@ -165,7 +161,7 @@ def get_metrics():
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
 
-# Data Request Admin Management Routes
+
 @application.route("/data-request/admins", methods=["GET", "OPTIONS"])
 @cross_origin()
 @collaborators_utils.authenticate
@@ -190,10 +186,9 @@ def delete_data_request_admin_route():
         return _build_cors_preflight_response()
     return delete_data_request_admin(request)
 
-
-
 @application.route("/get-results", methods=["GET"])
 @cross_origin()
+@collaborators_utils.authenticate
 def get_results():
     if "result_data" in session:
         return jsonify(session["result_data"])
@@ -202,11 +197,12 @@ def get_results():
 
 @application.route("/submit-request", methods=["POST"])
 @cross_origin()
+@collaborators_utils.authenticate
 def submit_request():
     data = json.loads(request.data)
     response = add_data_request(data)
     if response["success"]:
-        admin_email = "sarza@usc.edu"
+        admin_email = "mhkhan@usc.edu"
         requestor_name = data["requestor"]["name"]
         file_name = response.get("filename", "Unknown_File.json")
         subject = f"[NPNL Enigma] New Data Request from {requestor_name}"
@@ -286,6 +282,7 @@ def get_data_and_summary_by_filename(filename):
     return json_data, 200
 '''
 
+'''
 @application.route("/send-email", methods=["GET"])
 @cross_origin()
 def send_email_to():
@@ -293,6 +290,7 @@ def send_email_to():
     response = send_email("mhkhan@usc.edu")
     return jsonify({"error": "Invalid operation", "response": response}), 200
 
+'''
 
 @application.route("/get-authors-list", methods=["GET", "OPTIONS"])
 @cross_origin()
@@ -301,7 +299,6 @@ def fetch_authors_list():
         return _build_cors_preflight_response()
     if app_mode == "admin":
         response = get_authors_list()
-        # json_data = json.dumps(response, default=str)
         return response["data"], 200
     else:
         return jsonify({"error": "Invalid operation"}), 401
@@ -318,26 +315,25 @@ def get_formatted_authors():
         return jsonify({"formattedAuthors": response_txt}), 200
 
 
-@application.route("/qc-pdf-data/<bids_id>/<ses_id>", methods=["GET"])
-@cross_origin()
-def get_qc_pdf(bids_id, ses_id):
-    return fetch_pdf_data(bids_id, ses_id)
+# @application.route("/qc-pdf-data/<bids_id>/<ses_id>", methods=["GET"])
+# @cross_origin()
+# def get_qc_pdf(bids_id, ses_id):
+#     return fetch_pdf_data(bids_id, ses_id)
 
 
-@application.route("/qc-data", methods=["GET"])
-@cross_origin()
-def get_qc_subjects_data():
-    return fetch_qc_data(), 200
+# @application.route("/qc-data", methods=["GET"])
+# @cross_origin()
+# def get_qc_subjects_data():
+#     return fetch_qc_data(), 200
 
 
-@application.route("/qc-pdf-data/<bids_id>/<ses_id>", methods=["POST"])
-@cross_origin()
-def update_qc_data(bids_id, ses_id):
-    data = json.loads(request.data)
-    res = update_qc_csv_data(bids_id, ses_id, data)
-    if res:
-        return jsonify({"success": True}), 200
-    return jsonify({"success": False}), 500
+# @application.route("/qc-pdf-data/<bids_id>/<ses_id>", methods=["POST"])
+# @cross_origin()
+# def update_qc_data(bids_id, ses_id):
+#     data = json.loads(request.data)
+#     res = update_qc_csv_data(bids_id, ses_id, data)
+#     if res:
+#         return jsonify({"success": True}), 200
 
 @application.route("/collaborators/get_user_details", methods=["GET", "OPTIONS"])
 @cross_origin()
@@ -426,6 +422,14 @@ def check_collaborator_by_email():
         return _build_cors_preflight_response()
     return collaborators_utils.check_collaborator_by_email(request)
 
+@application.route("/collaborators/members-by-cohort", methods=["GET", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def get_members_by_cohort_route():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.get_members_by_cohort_and_pi(request)
+
 @application.route("/collaborators/get_admins", methods=["GET", "OPTIONS"])
 @cross_origin()
 @collaborators_utils.authenticate
@@ -457,6 +461,14 @@ def check_admin_status():
     if request.method == "OPTIONS":
         return _build_cors_preflight_response()
     return collaborators_utils.check_admin_status(request)
+
+@application.route("/collaborators/last-updated", methods=["GET", "OPTIONS"])
+@cross_origin()
+@collaborators_utils.authenticate
+def get_last_updated_route():
+    if request.method == "OPTIONS":
+        return _build_cors_preflight_response()
+    return collaborators_utils.get_last_updated(request)
 
 
 def _build_cors_preflight_response():

@@ -17,8 +17,8 @@ interface DataTableProps {
   columnNames?: string[];
   columnHeaders?: { [key: string]: string };
   isAdmin?: boolean;
-  onToggleActive?: (collaborator: any) => void;  // ⭐ ADD THIS
-  currentUserEmail?: string;  // ⭐ ADD THIS
+  onToggleActive?: (collaborator: any) => void; 
+  currentUserEmail?: string;  
 }
 
 const customStyles: TableStyles = {
@@ -61,18 +61,16 @@ export const CustomDataTable: React.FC<DataTableProps> = ({
   onRowClick,
   isAdmin = false,
   columnHeaders,
-  onToggleActive,  // ⭐ ADD THIS
-  currentUserEmail,  // ⭐ ADD THIS
+  onToggleActive, 
+  currentUserEmail,  
 }) => {
   const columns = useMemo(() => {
     const keys = columnNames || Object.keys(dataFrame[0] || {});
-    // ⭐ Build the base columns
     const baseColumns: TableColumn<any>[] = keys.map((key) => ({
       name: columnHeaders?.[key] || key,
       selector: (row: { [x: string]: any }) => row[key],
       sortable: true,
     }));
-    // ⭐ If admin and onToggleActive exists, add Active column at the beginning
     if (isAdmin && onToggleActive) {
       const activeColumn: TableColumn<any> = {
         name: "Active",
@@ -116,26 +114,16 @@ export const CustomDataTable: React.FC<DataTableProps> = ({
     return <div>No data available.</div>;
   }
 
-  /*
-  const handleDownload = () => {
-    const csv = Papa.unparse(dataFrame);
-    const csvBlob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(csvBlob);
-    link.download = "data.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-  };*/
   const handleDownload = async () => {
     try {
       const token = await getCurrentUserToken();
       const blob = await ApiUtils.downloadCollaboratorsCSV(token);
       
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `collaborators_${new Date().toISOString().split('T')[0]}.csv`; // filename with date
+      const localDate = new Date().toLocaleDateString('en-CA');
+      link.download = `collaborators_${localDate}.csv`; // filename with date
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -158,6 +146,7 @@ export const CustomDataTable: React.FC<DataTableProps> = ({
           customStyles={customStyles}
           pagination={paginate}
           paginationPerPage={20}
+          paginationRowsPerPageOptions={[10, 20, 50, 100]}
           persistTableHead
           highlightOnHover
           pointerOnHover

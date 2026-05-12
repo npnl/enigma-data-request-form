@@ -41,7 +41,6 @@ JSON_LIST_FIELDS = [
     "state_list",
     "country_list",
     "cohort_enigma_list",
-    "cohort_orig_list",
     "active_members",
     "former_members",
     "cohort_contributors",
@@ -63,10 +62,6 @@ SCALAR_FIELDS = [
 ]
 
 def _flatten_list(value):
-    """
-    Flatten arbitrarily nested lists into a single flat list.
-    Non-list items are kept as-is.
-    """
     result = []
     stack = [value]
     while stack:
@@ -80,41 +75,44 @@ def _flatten_list(value):
 
 
 def _parse_collaborator_row(row: dict) -> dict:
-    """
-    Convert a raw CSV row (all strings) into a Python dict where
-    the JSON fields are converted to real lists.
-    """
-    parsed = dict(row)  # shallow copy
+    parsed = dict(row)
     parsed["members_initialized"] = parsed.get("members_initialized", False)
     is_active_raw = parsed.get("is_active", "TRUE")
     if isinstance(is_active_raw, str):
         parsed["is_active"] = is_active_raw.upper() == "TRUE"
     else:
         parsed["is_active"] = bool(is_active_raw)
+
+    cohort_orig_map_raw = parsed.get("cohort_orig_map", "")
+    if cohort_orig_map_raw:
+        try:
+            loaded = json.loads(cohort_orig_map_raw)
+            if isinstance(loaded, dict):
+                parsed["cohort_orig_map"] = loaded
+            else:
+                parsed["cohort_orig_map"] = {}
+        except (json.JSONDecodeError, TypeError):
+            parsed["cohort_orig_map"] = {}
+    else:
+        parsed["cohort_orig_map"] = {}
     
     pi_last_name_raw = parsed.get("pi_last_name", "")
     if pi_last_name_raw:
         try:
-            # Try to parse as JSON list
             loaded = json.loads(pi_last_name_raw)
             if isinstance(loaded, list):
-                # It's already a list
                 parsed["pi_last_name"] = loaded
             elif isinstance(loaded, str):
-                # It's a string, make it a single-item list
                 parsed["pi_last_name"] = [loaded] if loaded else []
             else:
-                # Some other type, convert to list
                 parsed["pi_last_name"] = [str(loaded)]
         except (json.JSONDecodeError, TypeError):
-            # If it's a plain string (old format), convert to single-item list
             pi_last_name_str = str(pi_last_name_raw).strip()
             parsed["pi_last_name"] = [pi_last_name_str] if pi_last_name_str else []
     else:
         parsed["pi_last_name"] = []
     blanket_opt_in_raw = parsed.get("blanket_opt_in", "")
     if isinstance(blanket_opt_in_raw, str):
-        # Check if the value contains "yes" (case-insensitive)
         parsed["blanket_opt_in"] = "yes" if blanket_opt_in_raw.lower().startswith("yes") else ""
     else:
         parsed["blanket_opt_in"] = ""
@@ -127,28 +125,23 @@ def _parse_collaborator_row(row: dict) -> dict:
         raw_str = str(raw).strip()
         try:
             loaded = json.loads(raw_str)
-            # If the CSV stored something like `"\"value\""` or `"\"[... ]\""`:
             if isinstance(loaded, str):
                 try:
                     loaded = json.loads(loaded)
                 except json.JSONDecodeError:
-                    # fall back to single string
                     parsed[field] = [loaded]
                     continue
             if isinstance(loaded, list):
                 flat = _flatten_list(loaded)
                 parsed[field] = flat
             elif isinstance(loaded, dict):
-                # store single dict as list of dicts
                 parsed[field] = [loaded]
             else:
-                # scalar → wrap in list
                 parsed[field] = [loaded]
 
         except json.JSONDecodeError:
             parsed[field] = [raw_str]
 
-    # index and timestamp can stay as strings for now
     return parsed
 
 def _serialize_collaborator_row(row: dict) -> dict:
@@ -158,7 +151,6 @@ def _serialize_collaborator_row(row: dict) -> dict:
     """
     out = dict(row)
 
-    # Ensure required scalar fields exist
     out["index"] = str(out.get("index", "")).strip()
     out["timestamp"] = str(out.get("timestamp", "")).strip()
     out["primary_email"] = (out.get("primary_email") or "").strip()
@@ -170,11 +162,15 @@ def _serialize_collaborator_row(row: dict) -> dict:
     out["profile_picture"] = out.get("profile_picture", "") or ""
     #out["cohort_funding_ack"] = out.get("cohort_funding_ack", "") or ""
     out["members_initialized"] = str(out.get("members_initialized", "")).strip()
+    cohort_orig_map = out.get("cohort_orig_map", {})
+    if isinstance(cohort_orig_map, dict):
+        out["cohort_orig_map"] = json.dumps(cohort_orig_map, ensure_ascii=False)
+    else:
+        out["cohort_orig_map"] = json.dumps({}, ensure_ascii=False)
     pi_last_name = out.get("pi_last_name", [])
     if isinstance(pi_last_name, list):
         out["pi_last_name"] = json.dumps(pi_last_name, ensure_ascii=False)
     elif isinstance(pi_last_name, str) and pi_last_name:
-        # If it's a string, convert to list first
         out["pi_last_name"] = json.dumps([pi_last_name], ensure_ascii=False)
     else:
         out["pi_last_name"] = json.dumps([], ensure_ascii=False)
@@ -196,13 +192,15 @@ def _serialize_collaborator_row(row: dict) -> dict:
             continue
 
         if isinstance(value, list):
-            # normalize nested lists -> flat
+            value = [v for v in value if v is not None and str(v).strip()]
+            if not value:  
+                out[field] = json.dumps([])
+                continue
             flat = _flatten_list(value)
             out[field] = json.dumps(flat)
             continue
 
         if isinstance(value, dict):
-            # keep as single dict in a list (for fields that are list of dicts)
             out[field] = json.dumps([value])
             continue
 
@@ -264,11 +262,9 @@ def check_user_authorization(request):
         if not user_email:
             return jsonify({"authorized": False, "message": "Email not found"}), 400
         
-        # Check if user is in admins CSV
         admins = get_admins_list()
         is_admin = user_email in [a.lower() for a in admins]
         
-        # Check if user is in collaborators CSV
         collaborators = get_collaborators_data()
         user_collab = None
         for collab in collaborators:
@@ -276,7 +272,6 @@ def check_user_authorization(request):
                 user_collab = collab
                 break
         
-        # Determine authorization
         if is_admin:
             is_active = user_collab.get("is_active", True) if user_collab else True
             return jsonify({
@@ -289,7 +284,6 @@ def check_user_authorization(request):
                 "user_details": user_collab
             }), 200
         elif user_collab:
-            # Collaborator only (not admin)
             is_active = user_collab.get("is_active", True)
             if not is_active:
                 return jsonify({
@@ -307,10 +301,9 @@ def check_user_authorization(request):
             }), 200
         
         else:
-            # Not found in either CSV
             return jsonify({
                 "authorized": False,
-                "message": "You are not authorized to access this system. Please contact NPNL at npnlusc@gmail.com."
+                "message": "You are not authorized to access this system. Please contact NPNL at mhkhan@usc.edu."
             }), 403
             
     except Exception as e:
@@ -360,7 +353,7 @@ def is_admin(decoded_token):
     admins = get_admins_list()
     return user_email in admins
 
-# Helper function to update S3 CSV
+
 def update_s3_csv(bucket, key, data, fieldnames):
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=fieldnames)
@@ -401,7 +394,7 @@ def update_s3_collaborators_csv(collaborators: List[dict]):
         "state_list",
         "country_list",
         "cohort_enigma_list",
-        "cohort_orig_list",
+        "cohort_orig_map",
         "role",
         "pi_last_name",
         "profile_picture",
@@ -454,43 +447,26 @@ def get_user_details(request):
 
         if not user_details:
             return jsonify({"message": "User not found"}), 404
-        '''
-        is_active = user_details.get("is_active", True)
-        
-        if not is_active:
-            # Send email notification
-            send_inactive_user_email(user_details.get("primary_email"))
-            return jsonify({
-                "error": "Your account is inactive. Please contact NPNL at npnlusc@gmail.com to reactivate your account.",
-                "inactive": True
-            }), 403
-        '''
-        # ----------- AUTO-POPULATE ACTIVE MEMBERS ONLY IF NEVER INITIALIZED -----------
+
         if user_details.get("role") in ["PI", "Co-PI"]:
             pi_email = user_details.get("primary_email", "")
             pi_last_name = user_details.get("last_name", "")
             initialized = user_details.get("members_initialized", False)
             all_potential_members = get_cohort_members(pi_last_name, collaborators, exclude_email=pi_email)
-            # Only auto-fill if the field is missing entirely
             if not initialized:
                 user_details["active_members"] = all_potential_members
             else:
-                # Already initialized - merge new members while respecting manual organization
                 existing_active = user_details.get("active_members", [])
                 existing_former = user_details.get("former_members", [])
-                
-                # Get emails of existing members
                 active_emails = {m.get("email", "").lower() for m in existing_active if isinstance(m, dict)}
                 former_emails = {m.get("email", "").lower() for m in existing_former if isinstance(m, dict)}
                 
-                # Find NEW members (not in active or former)
                 new_members = []
                 for member in all_potential_members:
                     member_email = member["email"].lower()
                     if member_email not in active_emails and member_email not in former_emails:
                         new_members.append(member)
                 
-                # Add new members to active list
                 if new_members:
                     user_details["active_members"] = existing_active + new_members
 
@@ -520,10 +496,6 @@ NPNL Team
         print(f"Failed to send inactive user email: {e}")
 
 def get_user_role_and_cohorts(user_email: str, collaborators: List[dict]):
-    """
-    Returns (role, cohorts) for a given user email.
-    Returns (None, []) if user not found.
-    """
     user_email = user_email.lower()
     for collab in collaborators:
         if (collab.get("primary_email") or "").lower() == user_email:
@@ -545,25 +517,19 @@ def upload_profile_picture(request):
             return jsonify({"message": "No image provided"}), 400
         
         base64_image = data["image"]
-        
-        # Remove the data:image/...;base64, prefix if present
         if "," in base64_image:
             base64_image = base64_image.split(",")[1]
         
-        # Decode base64
         try:
             image_data = base64.b64decode(base64_image)
         except Exception as e:
             print(f"Error decoding base64: {e}")
             return jsonify({"message": "Invalid image data"}), 400
         
-        # Generate unique filename
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        # Use index if available, otherwise use email
         user_index = data.get("user_index", user_email.replace("@", "_").replace(".", "_"))
         filename = f"profile_pictures/{user_index}_{timestamp}.jpg"
         
-        # Upload to S3
         s3 = boto3.client(
             "s3",
             aws_access_key_id=S3_ACCESS_KEY,
@@ -578,7 +544,6 @@ def upload_profile_picture(request):
             ContentType="image/jpeg",
         )
         
-        # Generate URL
         image_url = f"https://{COLLABORATORS_BUCKET}.s3.amazonaws.com/{filename}"
         
         print(f"Profile picture uploaded: {image_url}")
@@ -608,22 +573,16 @@ def delete_profile_picture(request):
         if not image_url:
             return jsonify({"message": "Image URL is required"}), 400
         
-        # Extract the S3 key from the URL
-        # Example URL: https://bucket-name.s3.amazonaws.com/profile_pictures/123_20240115.jpg
-        # Extract: profile_pictures/123_20240115.jpg
         try:
             from urllib.parse import urlparse
             parsed_url = urlparse(image_url)
-            # Get the path and remove leading slash
             s3_key = parsed_url.path.lstrip('/')
             
-            print(f"🔍 Extracted S3 key: {s3_key}")
             
         except Exception as e:
             print(f"Error parsing URL: {e}")
             return jsonify({"message": "Invalid image URL"}), 400
         
-        # Delete from S3
         s3 = boto3.client(
             "s3",
             aws_access_key_id=S3_ACCESS_KEY,
@@ -636,7 +595,6 @@ def delete_profile_picture(request):
             Key=s3_key
         )
         
-        print(f"Deleted profile picture from S3: {s3_key}")
         
         return jsonify({"message": "Profile picture deleted successfully"}), 200
         
@@ -653,7 +611,6 @@ def get_user_by_index(request):
 
         collaborators = get_collaborators_data()
 
-        # ----------- FIND TARGET USER BY INDEX -----------
         index = request.args.get("index")
         if not index:
             return jsonify({"message": "Missing index"}), 400
@@ -662,22 +619,18 @@ def get_user_by_index(request):
         if not target:
             return jsonify({"message": "Not found"}), 404
 
-       # ----------- AUTO-POPULATE CURRENT MEMBERS FOR PIs -----------
-        # Only if the PI has NEVER had active_members set before
         if target.get("role") in ["PI", "Co-PI"]:
             pi_email = target.get("primary_email", "")
             pi_last_name = target.get("last_name", "")
             initialized = target.get("members_initialized", False)
             all_potential_members = get_cohort_members(pi_last_name, collaborators, exclude_email=pi_email)
 
-            # Only auto-populate if field is missing (None) – NOT if empty list
             if not initialized:
                 target["active_members"] = all_potential_members
             else:
                 existing_active = target.get("active_members", [])
                 existing_former = target.get("former_members", [])
                 
-                # Get emails of existing members
                 active_emails = {m.get("email", "").lower() for m in existing_active if isinstance(m, dict)}
                 former_emails = {m.get("email", "").lower() for m in existing_former if isinstance(m, dict)}
                 new_members = []
@@ -689,16 +642,11 @@ def get_user_by_index(request):
                     target["active_members"] = existing_active + new_members
             
             
-
-        # ----------- ADMIN OVERRIDE -----------
         if is_admin(decoded_token):
             return jsonify(target), 200
-
-        # ----------- IS SELF? (Members can view only themselves) -----------
         if user_email == (target.get("primary_email") or "").lower():
             return jsonify(target), 200
 
-        # ----------- CHECK IF USER IS A PI -----------
         me = next(
             (c for c in collaborators if (c.get("primary_email") or "").lower() == user_email),
             None
@@ -711,11 +659,9 @@ def get_user_by_index(request):
                 target_pi_list = [target_pi_list] if target_pi_list else []
             target_pi_list_lower = [pi.strip().lower() for pi in target_pi_list if pi]
 
-            # PI can view only users in same cohort
             if my_last in target_pi_list_lower:
                 return jsonify(target), 200
 
-        # ----------- OTHERWISE FORBIDDEN -----------
         return jsonify({"message": "Forbidden"}), 403
 
     except Exception as e:
@@ -755,7 +701,6 @@ def update_user_details(request):
 
         target_email = (target.get("primary_email") or "").lower()
         
-        # Handle is_active toggle by admin
         if "is_active" in user_updates and target.get("role") not in ["PI", "Co-PI"]:
             new_is_active = user_updates.get("is_active")
             target["is_active"] = new_is_active
@@ -763,7 +708,6 @@ def update_user_details(request):
             if isinstance(target_pi_list, str):
                 target_pi_list = [target_pi_list] if target_pi_list else []
 
-            # Find the PI for this member and update their lists
             for pi_last_name in target_pi_list:
                 pi_last_name_lower = pi_last_name.strip().lower()
                 for idx, collab in enumerate(collaborators):
@@ -802,13 +746,44 @@ def update_user_details(request):
                             collaborators[idx]["members_initialized"] = True
                             break
 
-        # ----------- UPDATE LOGIC -----------
         target["timestamp"] = datetime.datetime.now().isoformat()
         
         if "is_active" in user_updates:
             target["is_active"] = user_updates["is_active"]
 
-        # Handle email updates
+        if "role" in user_updates:
+            old_role = target.get("role")
+            target["role"] = user_updates["role"]
+            if user_updates["role"] in ["PI", "Co-PI"] and old_role == "Member":
+                old_pi_list = target.get("pi_last_name", [])
+                if isinstance(old_pi_list, str):
+                    old_pi_list = [old_pi_list] if old_pi_list else []
+                target["pi_last_name"] = []
+                member_email = target.get("primary_email", "").lower()
+                for old_pi_name in old_pi_list:
+                    old_pi_name_lower = old_pi_name.strip().lower()
+                    
+                    for idx, collab in enumerate(collaborators):
+                        if collab.get("role") in ["PI", "Co-PI"]:
+                            pi_last_name = (collab.get("last_name") or "").strip().lower()
+                            
+                            if pi_last_name == old_pi_name_lower:
+                                active_members = collab.get("active_members", [])
+                                active_members = [
+                                    m for m in active_members 
+                                    if isinstance(m, dict) and (m.get("email") or "").lower() != member_email
+                                ]
+                                
+                                former_members = collab.get("former_members", [])
+                                former_members = [
+                                    m for m in former_members 
+                                    if isinstance(m, dict) and (m.get("email") or "").lower() != member_email
+                                ]
+                                
+                                collaborators[idx]["active_members"] = active_members
+                                collaborators[idx]["former_members"] = former_members
+                                break
+
         emails = user_updates.get("emails") or user_updates.get("email_list") or []
         if isinstance(emails, str):
             emails = [emails]
@@ -816,12 +791,17 @@ def update_user_details(request):
         if emails:
             target["primary_email"] = emails[0]
             target["email_list"] = emails
+        
+        old_pi_list_saved = target.get("pi_last_name", [])
+        if "pi_last_name" in user_updates:
+            target["pi_last_name"] = user_updates["pi_last_name"]
+
         new_pi_list = target.get("pi_last_name", [])
+        # new_pi_list = user_updates.get("pi_last_name", target.get("pi_last_name", []))
         if "pi_last_name" in user_updates and target.get("role") == "Member":
-            old_pi_list = target.get("pi_last_name", [])
+            old_pi_list = old_pi_list_saved
             new_pi_list = user_updates.get("pi_last_name", [])
             
-            # Ensure both are lists
             if isinstance(old_pi_list, str):
                 old_pi_list = [old_pi_list] if old_pi_list else []
             if isinstance(new_pi_list, str):
@@ -830,28 +810,24 @@ def update_user_details(request):
             old_pi_set = set(pi.strip().lower() for pi in old_pi_list if pi)
             new_pi_set = set(pi.strip().lower() for pi in new_pi_list if pi)
             
-            # PIs removed from the list
+
             removed_pis = old_pi_set - new_pi_set
-            # PIs added to the list
             added_pis = new_pi_set - old_pi_set
             
             member_email = target.get("primary_email", "").lower()
             
-            # Remove member from PIs that were removed
             for removed_pi_name in removed_pis:
                 for idx, collab in enumerate(collaborators):
                     if collab.get("role") in ["PI", "Co-PI"]:
                         pi_last_name = (collab.get("last_name") or "").strip().lower()
                         
                         if pi_last_name == removed_pi_name:
-                            # Remove from active_members
                             active_members = collab.get("active_members", [])
                             active_members = [
                                 m for m in active_members 
                                 if isinstance(m, dict) and (m.get("email") or "").lower() != member_email
                             ]
                             
-                            # Add to former_members
                             former_members = collab.get("former_members", [])
                             former_members = [
                                 m for m in former_members 
@@ -871,7 +847,6 @@ def update_user_details(request):
                             print(f"Removed member {member_email} from PI {removed_pi_name}'s active_members (moved to former)")
                             break
             
-            # Add member to PIs that were added
             for added_pi_name in added_pis:
                 for idx, collab in enumerate(collaborators):
                     if collab.get("role") in ["PI", "Co-PI"]:
@@ -885,14 +860,12 @@ def update_user_details(request):
                                 "role": "Member",
                             }
                             
-                            # Remove from former_members if present
                             former_members = collab.get("former_members", [])
                             former_members = [
                                 m for m in former_members 
                                 if isinstance(m, dict) and (m.get("email") or "").lower() != member_email
                             ]
                             
-                            # Add to active_members if not already there
                             active_members = collab.get("active_members", [])
                             member_exists = any(
                                 m.get("email", "").lower() == member_email
@@ -907,34 +880,20 @@ def update_user_details(request):
                             collaborators[idx]["members_initialized"] = True
                             print(f"Added member {member_email} to PI {added_pi_name}'s active_members")
                             break
-        if target.get("role") == "Member":
-            # Ensure new_pi_list is a list
-            if isinstance(new_pi_list, str):
-                new_pi_list = [new_pi_list] if new_pi_list else []
-            
-            if len(new_pi_list) == 0:
-                # No PIs left - set inactive
-                target["is_active"] = False
-                
-            else:
-                # Still has at least one PI - set active
-                target["is_active"] = True
-
-        # Update other fields
+        
         for key in ["first_name", "last_name", "MI", "orcid", "role", "profile_picture", "pi_last_name", "blanket_opt_in"]:
             if key in user_updates:
                 target[key] = user_updates[key]
 
-        # Update list fields
-        for key in ["degrees", "cohort_enigma_list", "cohort_orig_list", "active_members", 
-                    "former_members", "disclosures"]:
+        for key in ["degrees", "cohort_enigma_list", "active_members", "former_members", "disclosures"]:
             if key in user_updates:
                 target[key] = user_updates[key] if user_updates[key] is not None else []
+        if "cohort_orig_map" in user_updates:
+            target["cohort_orig_map"] = user_updates["cohort_orig_map"] if user_updates["cohort_orig_map"] is not None else {}
         
         if "active_members" in user_updates or "former_members" in user_updates:
             target["members_initialized"] = True
         
-        # Handle funding fields
         if "funding" in user_updates:
             target["funding_ack"] = user_updates["funding"] if user_updates["funding"] is not None else []
         elif "funding_ack" in user_updates:
@@ -944,7 +903,6 @@ def update_user_details(request):
         if "cohort_funding" in user_updates:
             target["cohort_funding"] = user_updates["cohort_funding"]
         
-        # Handle institutions
         if "institutions" in user_updates and user_updates["institutions"]:
             institutions = user_updates["institutions"]
             if isinstance(institutions, list):
@@ -963,11 +921,17 @@ def update_user_details(request):
                 target["country_list"] = [institutions.get("country", "")]
         collaborators[target_idx] = target
 
+        if target.get("role") in ["PI", "Co-PI"]:
+            target["is_active"] = True
+        elif target.get("role") == "Member":
+            if isinstance(new_pi_list, str):
+                new_pi_list = [new_pi_list] if new_pi_list else []
+            
+            target["is_active"] = len(new_pi_list) > 0
+
         if "active_members" in user_updates or "former_members" in user_updates:
             if target.get("role") in ["PI", "Co-PI"]:
-                # Get PI's last name
                 pi_last_name = (target.get("last_name") or "").strip()
-                # Get old and new former_members lists from the collaborators array
                 old_data = get_collaborators_data()[target_idx]
                 old_active_members = old_data.get("active_members", [])
                 old_former_members = old_data.get("former_members", [])
@@ -982,12 +946,11 @@ def update_user_details(request):
                 old_former_emails = {(m.get("email") or "").lower() for m in old_former_members if isinstance(m, dict)}
                 new_active_emails = {(m.get("email") or "").lower() for m in new_active_members if isinstance(m, dict)}
                 new_former_emails = {(m.get("email") or "").lower() for m in new_former_members if isinstance(m, dict)}
-                # Members added to active list - add PI to their pi_last_name
+
                 newly_active = new_active_emails - old_active_emails - old_former_emails
                 for member_email in newly_active:
                     for idx, collab in enumerate(collaborators):
                         if (collab.get("primary_email") or "").lower() == member_email:
-                            # Get current PI list
                             member_pi_list = collab.get("pi_last_name", [])
                             if isinstance(member_pi_list, str):
                                 member_pi_list = [member_pi_list] if member_pi_list else []
@@ -998,10 +961,9 @@ def update_user_details(request):
                                 collaborators[idx]["pi_last_name"] = member_pi_list
                                 print(f"Added PI '{pi_last_name}' to member {member_email}'s PI list: {member_pi_list}")
                             
-                            # Set member as active
                             collaborators[idx]["is_active"] = True
                             break
-                # Find newly added former members
+
                 newly_former = new_former_emails - old_former_emails
                 for member_email in newly_former:
                     for idx, collab in enumerate(collaborators):
@@ -1040,11 +1002,9 @@ def update_user_details(request):
                                 collaborators[idx]["pi_last_name"] = member_pi_list
                                 print(f"Reactivated: Added PI '{pi_last_name}' back to member {member_email}'s PI list: {member_pi_list}")
                             
-                            # Reactivate member
                             collaborators[idx]["is_active"] = True
                             break
-
-        # Save back to S3
+        
         update_s3_collaborators_csv(collaborators)
 
         return jsonify({"message": "User details updated successfully"}), 200
@@ -1063,7 +1023,6 @@ def get_pis_by_cohort():
     try:
         collaborators = get_collaborators_data()
         
-        # Build a mapping of cohort -> list of PIs
         cohort_pi_map = {}
         
         for collab in collaborators:
@@ -1078,10 +1037,8 @@ def get_pis_by_cohort():
                         if cohort_name not in cohort_pi_map:
                             cohort_pi_map[cohort_name] = []
                         
-                        # Store name with role
                         pi_info = {"name": pi_name, "role": role}
                         
-                        # Check if this PI is not already in the list
                         if pi_name and not any(p["name"] == pi_name for p in cohort_pi_map[cohort_name]):
                             cohort_pi_map[cohort_name].append(pi_info)
         
@@ -1094,9 +1051,6 @@ def get_pis_by_cohort():
         return {}
 
 def get_current_user_role(request):
-    """
-    Returns the role and cohorts of the currently authenticated user.
-    """
     try:
         decoded_token = request.decoded_token
         user_email = (decoded_token.get("email") or "").lower()
@@ -1134,7 +1088,6 @@ def delete_collaborator(request):
         if not data:
             return jsonify({"message": "Invalid request body"}), 400
 
-        # Support both index and email deletion
         target_index = data.get("index")
         target_email = data.get("email")
 
@@ -1142,11 +1095,9 @@ def delete_collaborator(request):
             return jsonify({"message": "Missing index or email"}), 400
 
         collaborators = get_collaborators_data()
-        # Find the collaborator to delete
         deleted_collab = None
         deleted_email = None
 
-        # Remove the collaborator
         updated_collaborators = []
         found = False
         for collab in collaborators:
@@ -1165,7 +1116,6 @@ def delete_collaborator(request):
         for collab in collaborators:
             if collab.get("role") in ["PI", "Co-PI"]:
                 updated = False
-                # Remove from active_members
                 active_members = collab.get("active_members", [])
                 if active_members:
                     original_count = len(active_members)
@@ -1177,7 +1127,6 @@ def delete_collaborator(request):
                         collab["active_members"] = active_members
                         updated = True
                 
-                # Remove from former_members
                 former_members = collab.get("former_members", [])
                 if former_members:
                     original_count = len(former_members)
@@ -1191,7 +1140,6 @@ def delete_collaborator(request):
 
         updated_collaborators = []
         for collab in collaborators:
-            # Skip the deleted collaborator
             if collab.get("primary_email", "").lower() != deleted_email:
                 updated_collaborators.append(collab)
 
@@ -1259,12 +1207,12 @@ def add_collaborator(request):
         # If PI is adding, use empty cohort and default role
         if is_pi:
             cohort_enigma_list = []  # PIs can't set cohorts
-            cohort_orig_list = []
+            cohort_orig_map = {}
             role = "Member"  # Default role for PI-added collaborators
         else:
             # Admin can set everything
             cohort_enigma_list = payload.get("cohort_enigma_list", [])
-            cohort_orig_list = payload.get("cohort_orig_list", [])
+            cohort_orig_map = payload.get("cohort_orig_map", {})
             role = payload.get("role", "")
         if is_pi:
             # PI is adding the member - use PI's last name as a single-item list
@@ -1298,7 +1246,7 @@ def add_collaborator(request):
             "state_list": state_list,
             "country_list": country_list,
             "cohort_enigma_list": cohort_enigma_list,
-            "cohort_orig_list": cohort_orig_list,
+            "cohort_orig_map": cohort_orig_map,
             "role": role,
             "pi_last_name": pi_last_name_list,
             "members_initialized": False,
@@ -1313,7 +1261,6 @@ def add_collaborator(request):
         }
 
         collaborators.append(new_collab)
-        # Add member to ALL selected PIs' active_members lists
         if role == "Member" and pi_last_name_list:
             member_info = {
                 "first_name": new_collab.get("first_name", ""),
@@ -1321,7 +1268,6 @@ def add_collaborator(request):
                 "email": new_collab.get("primary_email", ""),
                 "role": "Member",
             }
-            # Add to each PI's active_members list
             for pi_name in pi_last_name_list:
                 pi_name_lower = pi_name.strip().lower()
                 for idx, collab in enumerate(collaborators):
@@ -1374,15 +1320,9 @@ def get_all_collaborators(request):
         decoded_token = request.decoded_token
         user_email = decoded_token.get("email")
         collaborators = get_collaborators_data()
-        def safe_int_index(collab):
-            try:
-                idx = collab.get("index", "")
-                if idx == "" or idx is None:
-                    return 0
-                return int(idx)
-            except (ValueError, TypeError):
-                return 0
-        collaborators.sort(key=safe_int_index, reverse=True)
+        def safe_last_name(collab):
+            return (collab.get("last_name") or "").lower()
+        collaborators.sort(key=safe_last_name)
         formatted = [format_for_table(c) for c in collaborators]
         if is_admin(decoded_token):
             return jsonify(formatted), 200
@@ -1435,9 +1375,6 @@ def get_all_collaborators(request):
         return jsonify({"message": "Internal server error"}), 500
 
 def download_collaborators_csv(request):
-    """
-    Download the raw CSV content from S3
-    """
     try:
         decoded_token = request.decoded_token
         
@@ -1456,10 +1393,8 @@ def download_collaborators_csv(request):
             Key=COLLABORATORS_KEY
         )
         
-        # Read the CSV content
         csv_content = response['Body'].read().decode('utf-8')
         
-        # Return as file download
         return Response(
             csv_content,
             mimetype="text/csv",
@@ -1475,10 +1410,6 @@ def download_collaborators_csv(request):
         return jsonify({"message": "Internal server error"}), 500
     
 def get_cohort_members(pi_last_name: str, all_collaborators: List[dict], exclude_email: str = None) -> List[dict]:
-    """
-    Get all members whose pi_last_name matches the PI's last name.
-    Excludes the PI themselves.
-    """
     members = []
     exclude_email_lower = (exclude_email or "").lower()
     pi_last_name_lower = pi_last_name.strip().lower()
@@ -1486,11 +1417,9 @@ def get_cohort_members(pi_last_name: str, all_collaborators: List[dict], exclude
     for collab in all_collaborators:
         collab_email = (collab.get("primary_email") or "").lower()
         
-        # Skip the PI themselves
         if collab_email == exclude_email_lower:
             continue
 
-        # Also check if member's pi_last_name matches this PI's last name
         member_pi_list = collab.get("pi_last_name", [])
         if isinstance(member_pi_list, str):
                     member_pi_list = [member_pi_list] if member_pi_list else []
@@ -1505,6 +1434,77 @@ def get_cohort_members(pi_last_name: str, all_collaborators: List[dict], exclude
                 "role": collab.get("role", "Member"),
             })
     return members
+
+def get_members_by_cohort_and_pi(request):
+    try:
+        collaborators = get_collaborators_data()
+        
+        cohort_members_map = {}
+        
+        for collab in collaborators:
+            if collab.get("role") in ["PI", "Co-PI"]:
+                pi_first_name = collab.get('first_name', '')
+                pi_last_name = collab.get('last_name', '')
+                pi_name = f"{pi_first_name} {pi_last_name}".strip()
+                pi_role = collab.get('role', '')
+                
+                cohort_contributors = collab.get("cohort_contributors", [])
+                
+                for cohort_data in cohort_contributors:
+                    if isinstance(cohort_data, dict):
+                        cohort_name = cohort_data.get("cohort", "").strip()
+                        members = cohort_data.get("members", [])
+                        
+                        if cohort_name:
+                            if cohort_name not in cohort_members_map:
+                                cohort_members_map[cohort_name] = []
+                            
+                            # Only add if there are members
+                            if members:
+                                cohort_members_map[cohort_name].append({
+                                    "pi_name": pi_name,
+                                    "role": pi_role,
+                                    "members": members
+                                })
+        
+        return jsonify(cohort_members_map), 200
+        
+    except Exception as e:
+        print(f"Error in get_members_by_cohort_and_pi: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"message": "Internal server error"}), 500
+
+def get_last_updated(request):
+    try:
+        collaborators = get_collaborators_data()
+        
+        if not collaborators:
+            return jsonify({"last_updated": None}), 200
+        
+        most_recent = None
+        for collab in collaborators:
+            timestamp_str = collab.get("timestamp", "")
+            if timestamp_str:
+                try:
+                    dt = datetime.datetime.fromisoformat(timestamp_str)
+                    if most_recent is None or dt > most_recent:
+                        most_recent = dt
+                except (ValueError, TypeError):
+                    continue
+        
+        if most_recent:
+            return jsonify({
+                "last_updated": most_recent.isoformat()
+            }), 200
+        else:
+            return jsonify({"last_updated": None}), 200
+            
+    except Exception as e:
+        print(f"Error getting last updated: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"message": "Internal server error"}), 500
 
 
 def format_for_table(row):
@@ -1523,23 +1523,6 @@ def format_for_table(row):
             else ""
         ),
     })
-    '''
-    return {
-        "index": row.get("index", ""),
-        "first_name": row.get("first_name", ""),
-        "last_name": row.get("last_name", ""),
-
-        # The table expects "email"
-        "email": row.get("primary_email", ""),
-
-        # University → pick first element from university_list
-        "University/Institute": (
-            row["university_list"][0]
-            if isinstance(row.get("university_list"), list) and row["university_list"]
-            else ""
-        ),
-    }
-    '''
     return formatted
 
 def get_admins(request):
@@ -1753,4 +1736,4 @@ def _build_cors_preflight_response():
 
 
 if __name__ == "__main__":
-    application.run(port=5001, debug=True)
+    application.run(port=5000, debug=True)

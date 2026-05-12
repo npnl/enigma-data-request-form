@@ -33,7 +33,6 @@ export const sendSignInEmail = async (email: string) => {
 };
 
 
-// New function for data request admin login
 export const sendDataRequestAdminSignInEmail = async (email: string) => {
   await sendSignInLinkToEmail(auth, email, dataRequestActionCodeSettings);
   window.localStorage.setItem("emailForSignIn", email);
@@ -81,7 +80,6 @@ export const getCurrentUserToken = async (): Promise<string | null> => {
 };
 
 
-// Check if current user is data request admin (DYNAMIC - fetches from Firestore)
 export const checkIfDataRequestAdmin = async (): Promise<boolean> => {
   const user = auth.currentUser;
   if (!user || !user.email) return false;

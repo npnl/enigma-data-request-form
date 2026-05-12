@@ -4,6 +4,7 @@ import { DataRequestIn, MetricEntry } from "../../types/DataRequest";
 import { styled } from "styled-components";
 import ApiUtils from "../../api/ApiUtils";
 import { getCurrentUserToken } from "../../services/authService";
+import { auth } from "../../firebaseConfig";
 
 interface FormSummaryProps {
   data: DataRequestIn | undefined;
@@ -17,6 +18,20 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
     sessions_per_site: { [site: string]: number };
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [showAuthors, setShowAuthors] = useState(false);
+  const [cohortMembers, setCohortMembers] = useState<{
+    [cohort: string]: Array<{
+      pi_name: string;
+      role: string;
+      members: Array<{
+        first_name: string;
+        last_name: string;
+        email: string;
+        role: string;
+        credit_roles?: string[];
+      }>;
+    }>;
+  }>({});
   const [cohortPIMap, setCohortPIMap] = useState<{ 
     [cohort: string]: Array<{ name: string; role: string }> 
   }>({});
@@ -39,29 +54,48 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
     padding: 0.25rem 0;
     font-size: 0.95rem;
   `;
-  // ⭐ ADD THIS - Fetch PI mapping on mount
   useEffect(() => {
-    const fetchPIs = async () => {
+    const fetchPIsAndMembers = async () => {
       try {
+        if (!auth.currentUser) {
+          await new Promise<void>((resolve) => {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+              if (user) {
+                unsubscribe();
+                resolve();
+              }
+            });
+          });
+        }
         const token = await getCurrentUserToken();
         const piMap = await ApiUtils.fetchPIsByCohort(token);
         setCohortPIMap(piMap);
+        const membersMap = await ApiUtils.fetchMembersByCohort(token);
+        setCohortMembers(membersMap);
       } catch (error) {
         console.error("Error fetching PI mapping:", error);
       }
     };
     
-    fetchPIs();
+    fetchPIsAndMembers();
   }, []);
-  // Calculate session stats when data loads
   useEffect(() => {
     const calculateStats = async () => {
       if (!data || !data.data) return;
 
       try {
         setStatsLoading(true);
+        if (!auth.currentUser) {
+          await new Promise<void>((resolve) => {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+              if (user) {
+                unsubscribe();
+                resolve();
+              }
+            });
+          });
+        }
         
-        // Build the filters payload from the request data
         const filters = {
           timepoint: data.data.timepoint || "baseline",
           required_metrics: [
@@ -73,8 +107,8 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
           ) || [],
         };
 
-        // Call the API to get row count and site stats
-        const response = await ApiUtils.getRowCount(filters);
+        const token = await getCurrentUserToken();
+        const response = await ApiUtils.getRowCount(filters, token);
         setSessionStats({
           count: response.count,
           total_sites: response.total_sites,
@@ -105,13 +139,11 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
 
   const { behavior, imaging, or_groups, timepoint, notes } = data.data;
 
-  // Combine all required metrics from both behavior and imaging
   const allRequiredMetrics = [
     ...(behavior.required || []),
     ...(imaging.required || []),
   ];
 
-  // Combine all optional metrics from both behavior and imaging
   const allOptionalMetrics = [
     ...(behavior.optional || []),
     ...(imaging.optional || []),
@@ -120,7 +152,6 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
   const renderMetricText = (metric: MetricEntry) => {
     let displayText = metric.metric_name || metric.display_name;
     
-    // Add filter values if present
     if (metric.value1 || metric.value2) {
       if (metric.type === "int" || metric.type === "float") {
         if (metric.value1 && metric.value2) {
@@ -171,17 +202,12 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
     )
   );
 
-  // Calculate row count (this would come from the data summary)
-  // For now, we'll add a placeholder - you'll need to pass this from dataSummary
-  //const rowCount = data.data.row_count || "N/A";
-
   return (
     <Container>
       <h2 className="mt-3 mb-4" style={{ fontWeight: 700 }}>
         Form Summary
       </h2>
 
-      {/* Required Metrics */}
       {allRequiredMetrics.length > 0 && (
         <StyledCard>
           <StyledCardHeader>
@@ -193,7 +219,6 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
         </StyledCard>
       )}
 
-      {/* Optional Metrics */}
       {allOptionalMetrics.length > 0 && (
         <StyledCard>
           <StyledCardHeader>
@@ -205,9 +230,7 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
         </StyledCard>
       )}
 
-      {/* OR Groups */}
       {renderOrGroups()}
-      {/* Session Statistics */}
       <Row className="mb-3">
         <Col md={6}>
           <StyledCard>
@@ -235,7 +258,6 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
         </Col>
       </Row>
 
-      {/* Site Breakdown */}
       {sessionStats && sessionStats.sessions_per_site && Object.keys(sessionStats.sessions_per_site).length > 0 && (
         <StyledCard className="mb-3">
           <StyledCardHeader>Session_ids per Site</StyledCardHeader>
@@ -244,7 +266,6 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
               {Object.entries(sessionStats.sessions_per_site)
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([site, count]) => {
-                  // ⭐ Get PI names for this site
                   const piList = cohortPIMap[site] || [];
                   const piDisplay = piList.length > 0 
                     ? ` (${piList.map(p => `${p.name} - ${p.role}`).join(", ")})` 
@@ -276,7 +297,96 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
         </StyledCard>
       )}
 
-      {/* Secondary Proposal Status */}
+      {sessionStats && sessionStats.sessions_per_site && Object.keys(sessionStats.sessions_per_site).length > 0 && (
+        <StyledCard className="mb-3">
+          <StyledCardHeader 
+            onClick={() => setShowAuthors(!showAuthors)}
+            style={{ 
+              cursor: 'pointer',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <span>{showAuthors ? 'Hide Authors' : 'Show Authors'}</span>
+            <i className={`bi bi-chevron-${showAuthors ? 'up' : 'down'}`}></i>
+          </StyledCardHeader>
+          
+          {showAuthors && (
+            <StyledCardBody>
+              {Object.keys(sessionStats.sessions_per_site)
+                .sort((a, b) => a.localeCompare(b))
+                .map((site) => {
+                  const cohortData = cohortMembers[site] || [];
+                  
+                  if (cohortData.length === 0) {
+                    return (
+                      <div key={site} className="mb-4">
+                        <h6 style={{ fontWeight: 600, color: '#2c3e50', marginBottom: '0.5rem' }}>
+                          {site}
+                        </h6>
+                        <em style={{ color: '#999', fontSize: '0.85rem', marginLeft: '1rem' }}>
+                          No contributing members
+                        </em>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div key={site} className="mb-4">
+                      <h6 style={{ fontWeight: 600, color: '#2c3e50', marginBottom: '1rem' }}>
+                        {site}
+                      </h6>
+                      
+                      {cohortData.map((piData, idx) => (
+                        <div key={idx} className="ms-3 mb-3">
+                          <div style={{ 
+                            fontWeight: 500, 
+                            color: '#495057', 
+                            marginBottom: '0.5rem' 
+                          }}>
+                            {piData.pi_name} ({piData.role})
+                          </div>
+                          
+                          <div className="ms-3">
+                            {piData.members && piData.members.length > 0 ? (
+                              <ul style={{ 
+                                margin: 0, 
+                                paddingLeft: '1.5rem', 
+                                color: '#6c757d', 
+                                fontSize: '0.9rem' 
+                              }}>
+                                {piData.members.map((member, mIdx) => (
+                                  <li key={mIdx}>
+                                    {member.first_name} {member.last_name}
+                                    {member.credit_roles && member.credit_roles.length > 0 && (
+                                      <span style={{ 
+                                        color: '#999', 
+                                        fontSize: '0.85rem',
+                                        marginLeft: '0.5rem'
+                                      }}>
+                                        ({member.credit_roles.join(", ")})
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <em style={{ color: '#999', fontSize: '0.85rem' }}>
+                                No contributing members
+                              </em>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+            </StyledCardBody>
+          )}
+        </StyledCard>
+      )}
+
       <StyledCard>
         <StyledCardHeader>Secondary Proposal Status</StyledCardHeader>
         <StyledCardBody>
@@ -288,7 +398,6 @@ const FormSummary: React.FC<FormSummaryProps> = ({ data, isLoading }) => {
         </StyledCardBody>
       </StyledCard>
 
-      {/* Notes */}
       {notes && (
         <StyledCard>
           <StyledCardHeader>Notes</StyledCardHeader>

@@ -31,7 +31,6 @@ const SearchBar: React.FC<SearchBarProps> = ({allMetrics, onSearchSelect}) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Flatten metrics for searching
   const allMetricEntries = Object.entries(allMetrics).flatMap(
     ([category, subcategories]) =>
       Object.entries(subcategories).flatMap(([subcategory, metrics]) =>
@@ -46,7 +45,6 @@ const SearchBar: React.FC<SearchBarProps> = ({allMetrics, onSearchSelect}) => {
       )
   );
 
-  // Filter metrics that match query
  const filteredMetrics = query.trim()
   ? (() => {
       const q = query.toLowerCase();
@@ -58,19 +56,16 @@ const SearchBar: React.FC<SearchBarProps> = ({allMetrics, onSearchSelect}) => {
         return viewMatch && spaceMatch;
       });
 
-      // Metrics that start with the query
       const startsWith = visibleMetrics.filter((m) =>
         m.displayName.toLowerCase().startsWith(q)
       );
 
-      // Metrics that contain the query (but not starting)
       const contains = visibleMetrics.filter(
         (m) =>
           !m.displayName.toLowerCase().startsWith(q) &&
           m.displayName.toLowerCase().includes(q)
       );
 
-      // Combine results — startsWith first
       return [...startsWith, ...contains];
     })()
   : [];
@@ -106,7 +101,6 @@ const highlightMatch = (text: string, query: string) => {
             setSuggestionsVisible(true);
           }}
       />
-      {/*Clear Button */}
         {query && (
           <button
             type="button"
@@ -133,7 +127,6 @@ const highlightMatch = (text: string, query: string) => {
         )}
       </div>
 
-      {/* Autocomplete dropdown */}
       {suggestionsVisible && query && (
         <div className="list-group position-absolute w-100 mt-1 shadow-sm"
           style={{
